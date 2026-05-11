@@ -48,7 +48,7 @@ bool rtlwm::init(OSDictionary *dict)
     commandGate = nullptr;
     intrSource  = nullptr;
     pciDevice   = nullptr;
-    netInterface= nullptr;
+    netInterface = nullptr;
     halService  = nullptr;
     ifEnabled   = false;
     ifRunning   = false;
@@ -93,8 +93,7 @@ bool rtlwm::start(IOService *provider)
     /* Set up interrupt event source */
     intrSource = IOInterruptEventSource::interruptEventSource(
         this,
-        OSMemberFunctionCast(IOInterruptEventSource::Action,
-                             this, &rtlwm::handleInterrupt),
+        &rtlwm::interruptOccurred,
         provider, 0);
     if (!intrSource || workLoop->addEventSource(intrSource) != kIOReturnSuccess) {
         IOLog("rtlwm: failed to register interrupt\n");
@@ -105,8 +104,7 @@ bool rtlwm::start(IOService *provider)
     /* Watchdog timer (1-second interval) */
     watchdogTimer = IOTimerEventSource::timerEventSource(
         this,
-        OSMemberFunctionCast(IOTimerEventSource::Action,
-                             this, &rtlwm::handleWatchdog));
+        &rtlwm::watchdogTimeout);
     if (!watchdogTimer ||
         workLoop->addEventSource(watchdogTimer) != kIOReturnSuccess) {
         IOLog("rtlwm: failed to create watchdog timer\n");
@@ -301,9 +299,23 @@ IOReturn rtlwm::setPowerState(unsigned long ordinal, IOService *)
  * Interrupt / watchdog
  * -------------------------------------------------------------------------- */
 
+void rtlwm::interruptOccurred(OSObject *owner, IOInterruptEventSource *, int)
+{
+    rtlwm *self = OSDynamicCast(rtlwm, owner);
+    if (self)
+        self->handleInterrupt();
+}
+
 void rtlwm::handleInterrupt()
 {
     /* TODO: forward to HAL interrupt handler */
+}
+
+void rtlwm::watchdogTimeout(OSObject *owner, IOTimerEventSource *)
+{
+    rtlwm *self = OSDynamicCast(rtlwm, owner);
+    if (self)
+        self->handleWatchdog();
 }
 
 void rtlwm::handleWatchdog()

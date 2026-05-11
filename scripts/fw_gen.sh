@@ -30,23 +30,19 @@ for bin in "$FW_DIR"/*.bin; do
     varname="${varname//-/_}"
 
     echo "Compressing $name…"
-    python3 - "$bin" "$bin.zlib" <<'PY'
+    python3 - "$bin" <<'PY' | xxd -i -n "${varname}_data" >> "$OUT"
 import sys
 import zlib
 
-src_path, out_path = sys.argv[1], sys.argv[2]
+src_path = sys.argv[1]
 with open(src_path, "rb") as src:
     data = src.read()
-with open(out_path, "wb") as out:
-    out.write(zlib.compress(data))
+sys.stdout.buffer.write(zlib.compress(data))
 PY
 
-    xxd -i -n "${varname}_data" "$bin.zlib" >> "$OUT"
-    echo "static const int ${varname}_size = ${varname}_data_len;" >> "$OUT"
     echo "" >> "$OUT"
 
-    entries+=("  { RTL_FW(\"$name\", ${varname}_data, ${varname}_size) },")
-    rm "$bin.zlib"
+    entries+=("  { RTL_FW(\"$name\", ${varname}_data, ${varname}_data_len) },")
 done
 
 echo "const struct FwDesc rtlFwList[] = {" >> "$OUT"
