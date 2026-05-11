@@ -13,6 +13,11 @@
 
 OSDefineMetaClassAndStructors(Airportrtlwm, IO80211ControllerBase)
 
+SInt32 rtlwmHandleStaIoctl(Airportrtlwm *controller, UInt requestType, int request,
+                           IO80211Interface *interface, void *data);
+SInt32 rtlwmHandleVirtualIoctl(Airportrtlwm *controller, UInt requestType, int request,
+                               IO80211VirtualInterface *interface, void *data);
+
 /* --------------------------------------------------------------------------
  * IOService lifecycle
  * -------------------------------------------------------------------------- */
@@ -97,15 +102,18 @@ IOWorkLoop *Airportrtlwm::getWorkLoop() const
  * IO80211Controller mandatory overrides
  * -------------------------------------------------------------------------- */
 
-SInt32 Airportrtlwm::apple80211Request(UInt request, int type,
+SInt32 Airportrtlwm::apple80211Request(UInt requestType, int request,
                                         IO80211Interface *interface,
                                         void *data)
 {
-    /*
-     * TODO: implement all APPLE80211_IOC_* get/set handlers.
-     * See AirportSTAIOCTL.cpp for the full dispatch table.
-     */
-    return EOPNOTSUPP;
+    return rtlwmHandleStaIoctl(this, requestType, request, interface, data);
+}
+
+SInt32 Airportrtlwm::apple80211VirtualRequest(UInt requestType, int request,
+                                               IO80211VirtualInterface *interface,
+                                               void *data)
+{
+    return rtlwmHandleVirtualIoctl(this, requestType, request, interface, data);
 }
 
 SInt32 Airportrtlwm::stopDMA()
@@ -185,4 +193,19 @@ IOReturn Airportrtlwm::setPowerState(unsigned long ordinal, IOService *)
 {
     /* TODO: wake / sleep the HAL */
     return IOPMAckImplied;
+}
+
+RtlDriverInfo *Airportrtlwm::getDriverInfo() const
+{
+    return halService ? halService->getDriverInfo() : nullptr;
+}
+
+RtlDriverController *Airportrtlwm::getDriverController() const
+{
+    return halService ? halService->getDriverController() : nullptr;
+}
+
+bool Airportrtlwm::isInterfaceEnabled() const
+{
+    return ifEnabled;
 }

@@ -63,6 +63,7 @@ public:
 
     /* IO80211Controller mandatory overrides */
     SInt32  apple80211Request(UInt, int, IO80211Interface *, void *) override;
+    SInt32  apple80211VirtualRequest(UInt, int, IO80211VirtualInterface *, void *) override;
     SInt32  stopDMA()                                               override;
     UInt32  hardwareOutputQueueDepth(IO80211Interface *)            override;
     SInt32  performCountryCodeOperation(IO80211Interface *,
@@ -78,6 +79,11 @@ public:
 
     /* Power management */
     IOReturn setPowerState(unsigned long ordinal, IOService *) override;
+
+    /* IOCTL helpers */
+    RtlDriverInfo       *getDriverInfo() const;
+    RtlDriverController *getDriverController() const;
+    bool                 isInterfaceEnabled() const;
 
 private:
     RtlHalService    *halService     {nullptr};
