@@ -68,8 +68,11 @@ public:
 class Rtl8822ceDriver {
 public:
     static constexpr std::uint16_t kRealtekVendorId = 0x10EC;
-    static constexpr std::array<PciDeviceId, 1> kSupportedDevices = {{
+    static constexpr std::array<PciDeviceId, 4> kSupportedDevices = {{
+        {kRealtekVendorId, 0xC821},
         {kRealtekVendorId, 0xC822},
+        {kRealtekVendorId, 0xB822},
+        {kRealtekVendorId, 0xD723},
     }};
 
     Rtl8822ceDriver(MacOsBackend& backend, LinuxPortedCore& core);
