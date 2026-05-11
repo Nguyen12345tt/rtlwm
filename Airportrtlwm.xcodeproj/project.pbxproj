@@ -9,6 +9,12 @@
 /* Begin PBXBuildFile section */
 		CB0A96E12FAED29B0075364C /* Airportrtlwm.hpp in Headers */ = {isa = PBXBuildFile; fileRef = CB0A96E02FAED29B0075364C /* Airportrtlwm.hpp */; };
 		CB0A96E32FAED29B0075364C /* Airportrtlwm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CB0A96E22FAED29B0075364C /* Airportrtlwm.cpp */; };
+		CB0A96EA2FAED29B0075364C /* AirportrtlwmDriver.hpp in Headers */ = {isa = PBXBuildFile; fileRef = CB0A96EB2FAED29B0075364C /* AirportrtlwmDriver.hpp */; };
+		CB0A96EC2FAED29B0075364C /* AirportrtlwmDriver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CB0A96ED2FAED29B0075364C /* AirportrtlwmDriver.cpp */; };
+		CB0A96EE2FAED29B0075364C /* MacOsBackendIOKit.hpp in Headers */ = {isa = PBXBuildFile; fileRef = CB0A96EF2FAED29B0075364C /* MacOsBackendIOKit.hpp */; };
+		CB0A96F02FAED29B0075364C /* MacOsBackendIOKit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CB0A96F12FAED29B0075364C /* MacOsBackendIOKit.cpp */; };
+		CB0A96F22FAED29B0075364C /* LinuxPortedCoreRtw88.hpp in Headers */ = {isa = PBXBuildFile; fileRef = CB0A96F32FAED29B0075364C /* LinuxPortedCoreRtw88.hpp */; };
+		CB0A96F42FAED29B0075364C /* LinuxPortedCoreRtw88.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CB0A96F52FAED29B0075364C /* LinuxPortedCoreRtw88.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -16,6 +22,12 @@
 		CB0A96E02FAED29B0075364C /* Airportrtlwm.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Airportrtlwm.hpp; sourceTree = "<group>"; };
 		CB0A96E22FAED29B0075364C /* Airportrtlwm.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Airportrtlwm.cpp; sourceTree = "<group>"; };
 		CB0A96E42FAED29B0075364C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		CB0A96EB2FAED29B0075364C /* AirportrtlwmDriver.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AirportrtlwmDriver.hpp; sourceTree = "<group>"; };
+		CB0A96ED2FAED29B0075364C /* AirportrtlwmDriver.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AirportrtlwmDriver.cpp; sourceTree = "<group>"; };
+		CB0A96EF2FAED29B0075364C /* MacOsBackendIOKit.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MacOsBackendIOKit.hpp; sourceTree = "<group>"; };
+		CB0A96F12FAED29B0075364C /* MacOsBackendIOKit.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MacOsBackendIOKit.cpp; sourceTree = "<group>"; };
+		CB0A96F32FAED29B0075364C /* LinuxPortedCoreRtw88.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = LinuxPortedCoreRtw88.hpp; sourceTree = "<group>"; };
+		CB0A96F52FAED29B0075364C /* LinuxPortedCoreRtw88.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = LinuxPortedCoreRtw88.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -50,6 +62,12 @@
 			children = (
 				CB0A96E02FAED29B0075364C /* Airportrtlwm.hpp */,
 				CB0A96E22FAED29B0075364C /* Airportrtlwm.cpp */,
+				CB0A96EB2FAED29B0075364C /* AirportrtlwmDriver.hpp */,
+				CB0A96ED2FAED29B0075364C /* AirportrtlwmDriver.cpp */,
+				CB0A96EF2FAED29B0075364C /* MacOsBackendIOKit.hpp */,
+				CB0A96F12FAED29B0075364C /* MacOsBackendIOKit.cpp */,
+				CB0A96F32FAED29B0075364C /* LinuxPortedCoreRtw88.hpp */,
+				CB0A96F52FAED29B0075364C /* LinuxPortedCoreRtw88.cpp */,
 				CB0A96E42FAED29B0075364C /* Info.plist */,
 			);
 			path = Airportrtlwm;
@@ -62,6 +80,9 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB0A96F22FAED29B0075364C /* LinuxPortedCoreRtw88.hpp in Headers */,
+				CB0A96EE2FAED29B0075364C /* MacOsBackendIOKit.hpp in Headers */,
+				CB0A96EA2FAED29B0075364C /* AirportrtlwmDriver.hpp in Headers */,
 				CB0A96E12FAED29B0075364C /* Airportrtlwm.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -134,6 +155,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB0A96F42FAED29B0075364C /* LinuxPortedCoreRtw88.cpp in Sources */,
+				CB0A96F02FAED29B0075364C /* MacOsBackendIOKit.cpp in Sources */,
+				CB0A96EC2FAED29B0075364C /* AirportrtlwmDriver.cpp in Sources */,
 				CB0A96E32FAED29B0075364C /* Airportrtlwm.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -29,7 +29,7 @@
 <key>IOProviderClass</key>
 <string>IOPCIDevice</string>
 <key>IOPCIPrimaryMatch</key>
-<string>0xC82210EC</string>
+<string>0xC82110EC 0xC82210EC 0xB82210EC 0xD72310EC</string>
 <key>IOProbeScore</key>
 <integer>60000</integer>
 </dict>
