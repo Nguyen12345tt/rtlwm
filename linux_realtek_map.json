@@ -1,0 +1,33 @@
+{
+  "source": {
+    "linux_repo": "https://github.com/torvalds/linux/tree/master/drivers/net/wireless/realtek",
+    "macos_port_repo": "https://github.com/Nguyen12345tt/rtlwm"
+  },
+  "families": [
+    {
+      "linux_driver": "rtw88",
+      "macos_layer": "rtlwm/hal_rtw88",
+      "chips": [
+        { "name": "RTL8822BE", "pci_id": "10ec:b822", "firmware": "rtw8822b_fw.bin" },
+        { "name": "RTL8822CE", "pci_id": "10ec:c822", "firmware": "rtw8822c_fw.bin" },
+        { "name": "RTL8723DE", "pci_id": "10ec:d723", "firmware": "rtw8723d_fw.bin" },
+        { "name": "RTL8821CE", "pci_id": "10ec:c821", "firmware": "rtw8821c_fw.bin" }
+      ]
+    },
+    {
+      "linux_driver": "rtw89",
+      "macos_layer": "rtlwm/hal_rtw89",
+      "chips": [
+        { "name": "RTL8852AE", "pci_id": "10ec:8852", "firmware": "rtw8852a_fw.bin" },
+        { "name": "RTL8852BE", "pci_id": "10ec:b852", "firmware": "rtw8852b_fw.bin" },
+        { "name": "RTL8851BE", "pci_id": "10ec:8851", "firmware": "rtw8851b_fw.bin" },
+        { "name": "RTL8852CE", "pci_id": "10ec:a852", "firmware": "rtw8852c_fw.bin" }
+      ]
+    }
+  ],
+  "macos_match_points": {
+    "airport_kext_personality": "Airportrtlwm/Info.plist",
+    "non_airport_kext_personality": "rtlwm/Info.plist",
+    "runtime_probe": "rtlwm/rtlwm.cpp#probeHardware"
+  }
+}
