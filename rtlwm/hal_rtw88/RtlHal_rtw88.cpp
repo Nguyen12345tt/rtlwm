@@ -19,6 +19,9 @@
  */
 
 #include "RtlHal_rtw88.hpp"
+#include <FwData.h>
+#include <IOKit/IOLib.h>
+#include <stdio.h>
 
 OSDefineMetaClassAndStructors(RtlHal_rtw88, RtlHalService)
 
@@ -256,10 +259,59 @@ bool RtlHal_rtw88::loadFirmware()
         [RTW88_CHIP_8821C] = "rtw8821c_fw.bin",
         [RTW88_CHIP_UNKNOWN] = nullptr,
     };
-    if (hw.chip_id < RTW88_CHIP_UNKNOWN)
-        strncpy(hw.fw_name, fwNames[hw.chip_id], sizeof(hw.fw_name) - 1);
+    if (hw.chip_id >= RTW88_CHIP_UNKNOWN || !fwNames[hw.chip_id]) {
+        IOLog("RtlHal_rtw88: no firmware mapping for chip_id=%d\n", hw.chip_id);
+        return false;
+    }
 
-    IOLog("RtlHal_rtw88: loadFirmware %s (stub)\n", hw.fw_name);
+    strncpy(hw.fw_name, fwNames[hw.chip_id], sizeof(hw.fw_name) - 1);
+    hw.fw_name[sizeof(hw.fw_name) - 1] = '\0';
+
+    OSData *fwData = getFWDescByName(hw.fw_name);
+    if (!fwData) {
+        IOLog("RtlHal_rtw88: firmware %s not found in embedded list\n", hw.fw_name);
+        return false;
+    }
+
+    const unsigned char *compressed = (const unsigned char *)fwData->getBytesNoCopy();
+    uint compressedLen = (uint)fwData->getLength();
+    if (!compressed || compressedLen == 0) {
+        fwData->release();
+        IOLog("RtlHal_rtw88: invalid embedded firmware blob %s\n", hw.fw_name);
+        return false;
+    }
+
+    bool inflated = false;
+    uint inflatedLen = 0;
+    size_t allocLen = compressedLen < 4096 ? 4096 : (size_t)compressedLen * 4;
+    const size_t maxAllocLen = 32 * 1024 * 1024;
+
+    for (int attempt = 0; attempt < 5 && allocLen <= maxAllocLen; attempt++) {
+        unsigned char *tmp = (unsigned char *)IOMalloc(allocLen);
+        if (!tmp)
+            break;
+        uint outLen = (uint)allocLen;
+        if (uncompressFirmware(tmp, &outLen,
+                               const_cast<unsigned char *>(compressed),
+                               compressedLen)) {
+            inflated = true;
+            inflatedLen = outLen;
+            IOFree(tmp, allocLen);
+            break;
+        }
+        IOFree(tmp, allocLen);
+        allocLen *= 2;
+    }
+
+    fwData->release();
+
+    if (!inflated) {
+        IOLog("RtlHal_rtw88: failed to inflate firmware %s\n", hw.fw_name);
+        return false;
+    }
+
+    snprintf(hw.fw_version, sizeof(hw.fw_version), "embedded:%u", inflatedLen);
+    IOLog("RtlHal_rtw88: loaded firmware %s (%u bytes)\n", hw.fw_name, inflatedLen);
     return true;
 }
 
