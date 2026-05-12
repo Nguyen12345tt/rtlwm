@@ -12,6 +12,7 @@
 #include "rtlwm.hpp"
 #include "hal_rtw88/RtlHal_rtw88.hpp"
 #include "hal_rtw89/RtlHal_rtw89.hpp"
+#include <limits.h>
 
 /* PCI vendor / device IDs for supported Realtek chips -------------------- */
 static const struct {
@@ -200,9 +201,17 @@ IOReturn rtlwm::enable(IONetworkInterface *netif)
 {
     if (ifRunning)
         return kIOReturnSuccess;
+    if (!netif)
+        return kIOReturnBadArgument;
+    if (!halService)
+        return kIOReturnNotReady;
 
     IOReturn ret = halService->enable(netif);
     if (ret == kIOReturnSuccess) {
+        if (!watchdogTimer || !outputQueue) {
+            (void)halService->disable(netif);
+            return kIOReturnNotReady;
+        }
         ifRunning = true;
         watchdogTimer->setTimeoutMS(1000);
         outputQueue->setCapacity(RTLWM_TX_RING_SZ);
@@ -216,10 +225,13 @@ IOReturn rtlwm::disable(IONetworkInterface *netif)
     if (!ifRunning)
         return kIOReturnSuccess;
 
-    outputQueue->stop();
-    outputQueue->flush();
-    watchdogTimer->cancelTimeout();
-    IOReturn ret = halService->disable(netif);
+    if (outputQueue) {
+        outputQueue->stop();
+        outputQueue->flush();
+    }
+    if (watchdogTimer)
+        watchdogTimer->cancelTimeout();
+    IOReturn ret = halService ? halService->disable(netif) : kIOReturnNotReady;
     ifRunning = false;
     return ret;
 }
@@ -256,9 +268,18 @@ IOReturn rtlwm::setHardwareAddress(const IOEthernetAddress *addr)
 
 IOReturn rtlwm::setMulticastList(IOEthernetAddress *addrs, UInt32 count)
 {
-    if (halService)
-        return halService->getDriverController()->setMulticastList(addrs, (int)count);
-    return kIOReturnNotReady;
+    if (!halService)
+        return kIOReturnNotReady;
+    if (count > static_cast<UInt32>(INT_MAX))
+        return kIOReturnBadArgument;
+
+    RtlDriverController *controller = halService->getDriverController();
+    if (!controller)
+        return kIOReturnNotReady;
+    if (count > 0 && !addrs)
+        return kIOReturnBadArgument;
+
+    return controller->setMulticastList(addrs, static_cast<int>(count));
 }
 
 IOReturn rtlwm::setPromiscuousMode(bool active)
@@ -269,6 +290,8 @@ IOReturn rtlwm::setPromiscuousMode(bool active)
 
 IOReturn rtlwm::getMaxPacketSize(UInt32 *maxSize) const
 {
+    if (!maxSize)
+        return kIOReturnBadArgument;
     *maxSize = kIOEthernetMaxPacketSize;
     return kIOReturnSuccess;
 }
@@ -315,6 +338,16 @@ IOReturn rtlwm::registerWithPolicyMaker(IOService *policyMaker)
 IOReturn rtlwm::setPowerState(unsigned long ordinal, IOService *)
 {
     powerState = (UInt32)ordinal;
+    if (!halService || !netInterface)
+        return IOPMAckImplied;
+
+    if (ordinal == 0) {
+        (void)disable(netInterface);
+        return IOPMAckImplied;
+    }
+
+    if (!ifRunning)
+        (void)enable(netInterface);
     return IOPMAckImplied;
 }
 

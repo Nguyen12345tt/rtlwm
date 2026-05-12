@@ -194,8 +194,10 @@ void RtlHal_rtw89::clearScanningFlags()
 }
 IOReturn RtlHal_rtw89::setMulticastList(IOEthernetAddress *addr, int cnt)
 {
-    if (!addr || cnt < 0)
+    if (cnt < 0 || (cnt > 0 && !addr))
         return kIOReturnBadArgument;
+    if (cnt == 0)
+        return kIOReturnSuccess;
     /* Multicast register programming is pending MAC filter integration. */
     return kIOReturnSuccess;
 }
