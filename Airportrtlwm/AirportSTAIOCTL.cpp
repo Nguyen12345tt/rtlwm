@@ -17,6 +17,10 @@ static bool sHasSavedBssid = false;
 static ether_addr sSavedBssid = {};
 static uint16_t sSavedRsnIeLen = 0;
 static uint8_t sSavedRsnIe[APPLE80211_MAX_RSN_IE_LEN] = {};
+static uint32_t sAssociationState = APPLE80211_S_INIT;
+static uint32_t sAssociationStatus = APPLE80211_STATUS_UNAVAILABLE;
+static uint32_t sAssociationResult = APPLE80211_RESULT_UNAVAILABLE;
+static bool sAssociationActive = false;
 
 static bool rtlwmIsGetRequest(UInt requestType)
 {
@@ -87,6 +91,30 @@ static void rtlwmClearAssociationState()
     rtlwmRememberSsid(nullptr, 0);
     rtlwmRememberBssid(nullptr);
     rtlwmRememberRsnIe(nullptr, 0);
+}
+
+static void rtlwmSetAssociationUnavailable(uint32_t state)
+{
+    sAssociationState = state;
+    sAssociationStatus = APPLE80211_STATUS_UNAVAILABLE;
+    sAssociationResult = APPLE80211_RESULT_UNAVAILABLE;
+    sAssociationActive = false;
+}
+
+static void rtlwmSetAssociationSuccess()
+{
+    sAssociationState = APPLE80211_S_RUN;
+    sAssociationStatus = APPLE80211_STATUS_SUCCESS;
+    sAssociationResult = APPLE80211_RESULT_SUCCESS;
+    sAssociationActive = true;
+}
+
+static void rtlwmSetAssociationFailure(uint32_t state, uint32_t status, uint32_t result)
+{
+    sAssociationState = state;
+    sAssociationStatus = status;
+    sAssociationResult = result;
+    sAssociationActive = false;
 }
 
 static SInt32 rtlwmGetSsid(apple80211_ssid_data *out)
@@ -236,7 +264,13 @@ static SInt32 rtlwmGetState(Airportrtlwm *controller, apple80211_state_data *out
     if (!controller || !rtlwmInitVersioned(out))
         return EINVAL;
 
-    out->state = controller->isInterfaceEnabled() ? APPLE80211_S_SCAN : APPLE80211_S_INIT;
+    if (sAssociationActive) {
+        out->state = APPLE80211_S_RUN;
+    } else if (sAssociationState != APPLE80211_S_INIT) {
+        out->state = sAssociationState;
+    } else {
+        out->state = controller->isInterfaceEnabled() ? APPLE80211_S_SCAN : APPLE80211_S_INIT;
+    }
     return kIOReturnSuccess;
 }
 
@@ -283,7 +317,7 @@ static SInt32 rtlwmGetAssociateResult(apple80211_assoc_result_data *out)
     if (!rtlwmInitVersioned(out))
         return EINVAL;
 
-    out->result = APPLE80211_RESULT_UNAVAILABLE;
+    out->result = sAssociationResult;
     return kIOReturnSuccess;
 }
 
@@ -292,7 +326,7 @@ static SInt32 rtlwmGetAssocStatus(apple80211_assoc_status_data *out)
     if (!rtlwmInitVersioned(out))
         return EINVAL;
 
-    out->status = APPLE80211_STATUS_UNAVAILABLE;
+    out->status = sAssociationStatus;
     return kIOReturnSuccess;
 }
 
@@ -587,6 +621,7 @@ static SInt32 rtlwmHandleDisassociate(Airportrtlwm *controller)
     if (RtlDriverController *driverController = controller ? controller->getDriverController() : nullptr)
         driverController->clearScanningFlags();
     rtlwmClearAssociationState();
+    rtlwmSetAssociationUnavailable(controller && controller->isInterfaceEnabled() ? APPLE80211_S_SCAN : APPLE80211_S_INIT);
     return kIOReturnSuccess;
 }
 
@@ -594,12 +629,26 @@ static SInt32 rtlwmHandleAssociate(const apple80211_assoc_data *in)
 {
     if (!in)
         return EINVAL;
+    if (in->ad_ssid_len > APPLE80211_MAX_SSID_LEN) {
+        rtlwmSetAssociationFailure(APPLE80211_S_SCAN, APPLE80211_STATUS_UNSPECIFIED_FAILURE, APPLE80211_RESULT_UNSPECIFIED_FAILURE);
+        return EINVAL;
+    }
 
+    static const ether_addr emptyBssid = {};
+    const bool hasSsid = in->ad_ssid_len > 0;
+    const bool hasBssid = memcmp(&in->ad_bssid, &emptyBssid, sizeof(emptyBssid)) != 0;
+    if (!hasSsid && !hasBssid) {
+        rtlwmSetAssociationFailure(APPLE80211_S_SCAN, APPLE80211_STATUS_ASSOCIATION_DENIED, APPLE80211_RESULT_ASSOCIATION_DENIED);
+        return EINVAL;
+    }
+
+    sAssociationState = APPLE80211_S_ASSOC;
     rtlwmRememberSsid(in->ad_ssid, in->ad_ssid_len);
     rtlwmRememberBssid(&in->ad_bssid);
     rtlwmRememberRsnIe(in->ad_rsn_ie, static_cast<uint16_t>(in->ad_rsn_ie_len));
     sAuthTypeLower = in->ad_auth_lower;
     sAuthTypeUpper = in->ad_auth_upper;
+    rtlwmSetAssociationSuccess();
     return kIOReturnSuccess;
 }
 
