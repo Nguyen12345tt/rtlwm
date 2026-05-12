@@ -25,3 +25,12 @@
 # After placing the .bin files here, run:
 #   scripts/fw_gen.sh
 # to generate the fw_list.cpp that is compiled into the kext.
+
+# Bulk Linux firmware mirror import
+#
+# Snapshot firmware from:
+#   https://github.com/CirrusLogic/linux-firmware
+# is stored under:
+#   rtlwm/firmware/linux-firmware/{rtw88,rtw89,rtlwifi,rtl_nic}
+#
+# This keeps upstream firmware trees intact for reference.
