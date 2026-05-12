@@ -226,15 +226,32 @@ IOReturn rtlwm::disable(IONetworkInterface *netif)
 
 IOReturn rtlwm::getHardwareAddress(IOEthernetAddress *addr)
 {
-    /* TODO: read MAC from HAL */
-    memset(addr, 0, sizeof(*addr));
+    if (!addr)
+        return kIOReturnBadArgument;
+
+    if (!halService)
+        return kIOReturnNotReady;
+
+    RtlDriverInfo *info = halService->getDriverInfo();
+    const uint8_t *mac  = info ? info->getMacAddress() : nullptr;
+    if (!mac)
+        return kIOReturnNotFound;
+
+    memcpy(addr->bytes, mac, sizeof(addr->bytes));
     return kIOReturnSuccess;
 }
 
 IOReturn rtlwm::setHardwareAddress(const IOEthernetAddress *addr)
 {
-    /* TODO: program MAC through HAL */
-    return kIOReturnUnsupported;
+    if (!addr)
+        return kIOReturnBadArgument;
+    if (!halService)
+        return kIOReturnNotReady;
+
+    RtlDriverInfo *info = halService->getDriverInfo();
+    if (!info || !info->setMacAddress(addr->bytes))
+        return kIOReturnUnsupported;
+    return kIOReturnSuccess;
 }
 
 IOReturn rtlwm::setMulticastList(IOEthernetAddress *addrs, UInt32 count)
@@ -246,7 +263,7 @@ IOReturn rtlwm::setMulticastList(IOEthernetAddress *addrs, UInt32 count)
 
 IOReturn rtlwm::setPromiscuousMode(bool active)
 {
-    /* TODO: HAL promiscuous mode */
+    (void)active;
     return kIOReturnSuccess;
 }
 

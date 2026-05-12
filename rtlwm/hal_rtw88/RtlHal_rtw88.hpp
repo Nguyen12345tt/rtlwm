@@ -78,6 +78,8 @@ public:
     UInt32      supportedFeatures()      override;
     const char *getFirmwareCountryCode() override;
     uint32_t    getTxQueueSize()         override;
+    const uint8_t *getMacAddress()       override;
+    bool        setMacAddress(const uint8_t *addr) override;
 
     /* RtlDriverController */
     void     clearScanningFlags()                               override;

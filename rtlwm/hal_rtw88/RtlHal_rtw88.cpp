@@ -22,6 +22,22 @@
 
 OSDefineMetaClassAndStructors(RtlHal_rtw88, RtlHalService)
 
+namespace {
+static void buildFallbackMac(IOPCIDevice *device, uint8_t mac[6])
+{
+    uint16_t vid = device->configRead16(kIOPCIConfigVendorID);
+    uint16_t pid = device->configRead16(kIOPCIConfigDeviceID);
+    uint8_t rev  = device->configRead8(kIOPCIConfigRevisionID);
+
+    mac[0] = 0x02; /* locally administered unicast */
+    mac[1] = (uint8_t)(vid >> 8);
+    mac[2] = (uint8_t)(vid & 0xff);
+    mac[3] = (uint8_t)(pid >> 8);
+    mac[4] = (uint8_t)(pid & 0xff);
+    mac[5] = rev;
+}
+}
+
 /* --------------------------------------------------------------------------
  * Factory
  * -------------------------------------------------------------------------- */
@@ -61,6 +77,7 @@ bool RtlHal_rtw88::attach(IOPCIDevice *device)
     case 0xC82F: hw.chip_id = RTW88_CHIP_8821C; break;
     default:     hw.chip_id = RTW88_CHIP_UNKNOWN;
     }
+    buildFallbackMac(device, hw.mac_addr);
 
     if (!initHardware())
         goto fail_hw;
@@ -159,7 +176,7 @@ const char *RtlHal_rtw88::getFirmwareName()
 
 UInt32 RtlHal_rtw88::supportedFeatures()
 {
-    return 0;   /* TODO: advertise 802.11n/ac features */
+    return 1;   /* kIO80211Feature80211n */
 }
 
 const char *RtlHal_rtw88::getFirmwareCountryCode()
@@ -170,6 +187,19 @@ const char *RtlHal_rtw88::getFirmwareCountryCode()
 uint32_t RtlHal_rtw88::getTxQueueSize()
 {
     return RTLWM_TX_RING_SZ;
+}
+
+const uint8_t *RtlHal_rtw88::getMacAddress()
+{
+    return hw.mac_addr;
+}
+
+bool RtlHal_rtw88::setMacAddress(const uint8_t *addr)
+{
+    if (!addr)
+        return false;
+    memcpy(hw.mac_addr, addr, sizeof(hw.mac_addr));
+    return true;
 }
 
 /* --------------------------------------------------------------------------

@@ -16,20 +16,18 @@ bool AirportRtlwmSkywalkInterface::init(IONetworkController *controller)
 
 IOReturn AirportRtlwmSkywalkInterface::outputPacket(mbuf_t packet, void *param)
 {
-    /* TODO: enqueue to HAL TX ring */
-    mbuf_freem(packet);
-    return kIOReturnOutputDropped;
+    return IO80211SkywalkInterface::outputPacket(packet, param);
 }
 
 UInt32 AirportRtlwmSkywalkInterface::inputPacket(mbuf_t packet)
 {
-    /* TODO: deliver to Skywalk layer */
-    return 0;
+    return IO80211SkywalkInterface::inputPacket(packet);
 }
 
 IOReturn AirportRtlwmSkywalkInterface::setLinkState(IO80211LinkState state,
                                                       UInt32 reason)
 {
-    /* TODO: propagate link state changes to the 802.11 stack */
-    return kIOReturnSuccess;
+    return IO80211SkywalkInterface::setLinkState(state, reason)
+           ? kIOReturnSuccess
+           : kIOReturnError;
 }

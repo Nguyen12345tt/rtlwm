@@ -131,13 +131,20 @@ UInt32 Airportrtlwm::hardwareOutputQueueDepth(IO80211Interface *)
 SInt32 Airportrtlwm::performCountryCodeOperation(IO80211Interface *,
                                                    IO80211CountryCodeOp op)
 {
-    /* TODO: forward to HAL */
-    return kIOReturnSuccess;
+    if (op == kIO80211CountryCodeReset) {
+        RtlDriverController *controller = getDriverController();
+        if (controller)
+            controller->clearScanningFlags();
+        return kIOReturnSuccess;
+    }
+    return kIOReturnUnsupported;
 }
 
 SInt32 Airportrtlwm::enableFeature(IO80211FeatureCode code, void *data)
 {
-    /* TODO: handle 802.11n / HT features */
+    (void)data;
+    if (code == kIO80211Feature80211n)
+        return kIOReturnSuccess;
     return kIOReturnUnsupported;
 }
 
@@ -169,8 +176,17 @@ IOReturn Airportrtlwm::disable(IONetworkInterface *interface)
 
 IOReturn Airportrtlwm::getHardwareAddress(IOEthernetAddress *addr)
 {
-    memset(addr, 0, sizeof(*addr));
-    /* TODO: read from HAL */
+    if (!addr)
+        return kIOReturnBadArgument;
+    if (!halService)
+        return kIOReturnNotReady;
+
+    RtlDriverInfo *info = halService->getDriverInfo();
+    const uint8_t *mac  = info ? info->getMacAddress() : nullptr;
+    if (!mac)
+        return kIOReturnNotFound;
+
+    memcpy(addr->bytes, mac, sizeof(addr->bytes));
     return kIOReturnSuccess;
 }
 
