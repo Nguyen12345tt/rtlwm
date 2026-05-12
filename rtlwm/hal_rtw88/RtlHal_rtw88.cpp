@@ -62,13 +62,24 @@ bool RtlHal_rtw88::attach(IOPCIDevice *device)
     memset(&hw, 0, sizeof(hw));
     hw.pciDev = device;
 
-    /* Map MMIO BAR 2 */
+    /* Map MMIO: prefer BAR2, fallback BAR0 like some Linux Realtek variants */
     hw.mmioMap = device->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress2);
+    uint32_t mmioBar = kIOPCIConfigBaseAddress2;
+    if (!hw.mmioMap) {
+        hw.mmioMap = device->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0);
+        mmioBar = kIOPCIConfigBaseAddress0;
+    }
     if (!hw.mmioMap) {
         IOLog("RtlHal_rtw88: failed to map MMIO\n");
         return false;
     }
     hw.mmio = (volatile uint8_t *)hw.mmioMap->getVirtualAddress();
+    if (!hw.mmio) {
+        IOLog("RtlHal_rtw88: MMIO virtual address is null\n");
+        hw.mmioMap->release();
+        hw.mmioMap = nullptr;
+        return false;
+    }
 
     /* Determine chip variant */
     uint16_t pid = device->configRead16(kIOPCIConfigDeviceID);
@@ -94,13 +105,17 @@ bool RtlHal_rtw88::attach(IOPCIDevice *device)
     memset(&ic, 0, sizeof(ic));
     /* 802.11 attach sequence is pending deeper net80211 integration. */
 
-    IOLog("RtlHal_rtw88: attached chip_id=%d\n", hw.chip_id);
+    IOLog("RtlHal_rtw88: attached chip_id=%d mmio_bar=%u\n", hw.chip_id,
+          (mmioBar == kIOPCIConfigBaseAddress2) ? 2U : 0U);
     return true;
 
 fail_fw:
 fail_hw:
-    hw.mmioMap->release();
-    hw.mmioMap = nullptr;
+    if (hw.mmioMap) {
+        hw.mmioMap->release();
+        hw.mmioMap = nullptr;
+    }
+    hw.mmio = nullptr;
     return false;
 }
 
@@ -112,6 +127,7 @@ void RtlHal_rtw88::detach(IOPCIDevice *device)
         hw.mmioMap->release();
         hw.mmioMap = nullptr;
     }
+    hw.mmio = nullptr;
 }
 
 /* --------------------------------------------------------------------------
@@ -336,7 +352,13 @@ void RtlHal_rtw88::startTxRx()
      *  2. Enable interrupt mask
      *  3. Start TX scheduler
      */
-    IOLog("RtlHal_rtw88: startTxRx (stub)\n");
+    if (!hw.pciDev) {
+        IOLog("RtlHal_rtw88: startTxRx skipped (no pciDev)\n");
+        return;
+    }
+    hw.pciDev->setMemoryEnable(true);
+    hw.pciDev->setBusMasterEnable(true);
+    IOLog("RtlHal_rtw88: startTxRx (pci mem+bm enabled)\n");
 }
 
 void RtlHal_rtw88::stopTxRx()
@@ -344,5 +366,11 @@ void RtlHal_rtw88::stopTxRx()
     /*
      * Porting reference: rtw88 mac.c: rtw_mac_stop_tx_rx()
      */
-    IOLog("RtlHal_rtw88: stopTxRx (stub)\n");
+    if (!hw.pciDev) {
+        IOLog("RtlHal_rtw88: stopTxRx skipped (no pciDev)\n");
+        return;
+    }
+    hw.pciDev->setBusMasterEnable(false);
+    hw.pciDev->setMemoryEnable(false);
+    IOLog("RtlHal_rtw88: stopTxRx (pci mem+bm disabled)\n");
 }

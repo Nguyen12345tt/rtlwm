@@ -44,3 +44,14 @@ Ghi chú: các họ chưa port ở trên cần thêm mapping chip, firmware path
 ## Mapping Linux -> macOS
 
 Xem file: `linux_realtek_map.json`.
+
+## Link Linux/Realtek tham chiếu nhanh
+
+- Linux Realtek wireless tree:
+  - https://github.com/torvalds/linux/tree/master/drivers/net/wireless/realtek
+- RTW88:
+  - https://github.com/torvalds/linux/tree/master/drivers/net/wireless/realtek/rtw88
+- RTW89:
+  - https://github.com/torvalds/linux/tree/master/drivers/net/wireless/realtek/rtw89
+- Linux firmware (nguồn `.bin`):
+  - https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
