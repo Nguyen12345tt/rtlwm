@@ -31,6 +31,7 @@ static const struct {
     { 0x10EC, 0xB852, "RTL8852BE" },
     { 0x10EC, 0x8851, "RTL8851BE" },
     { 0x10EC, 0xA852, "RTL8852CE" },
+    { 0x10EC, 0x8922, "RTL8922AE" },
 };
 #define RTLWM_NDEVICES (sizeof(rtlwm_devices) / sizeof(rtlwm_devices[0]))
 
@@ -398,7 +399,7 @@ RtlHalService *rtlwm::probeHardware(IOPCIDevice *dev)
         IOLog("rtlwm: detected %s\n", rtlwm_devices[i].name);
 
         /* RTW89 family */
-        if (pid == 0x8852 || pid == 0xB852 || pid == 0x8851 || pid == 0xA852)
+        if (pid == 0x8852 || pid == 0xB852 || pid == 0x8851 || pid == 0xA852 || pid == 0x8922)
             return RtlHal_rtw89::withDevice(dev);
 
         /* RTW88 family (default) */

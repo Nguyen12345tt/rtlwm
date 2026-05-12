@@ -21,6 +21,18 @@ Repository đã mirror cây thư mục theo cấu trúc itlwm:
    - `scripts/fw_gen.sh`
    - `include/FwData.h`
 
+## Tổng hợp theo danh sách Linux Realtek đã cung cấp
+
+- Đang có lớp HAL trong repo này:
+  - `rtw88`
+  - `rtw89`
+- Chưa có lớp HAL tương ứng trong repo này (chưa port):
+  - `rtl818x` (`rtl8180`, `rtl8187`)
+  - `rtl8xxxu`
+  - `rtlwifi/*` (`rtl8188ee`, `rtl8192*`, `rtl8723*`, `rtl8821ae`, `btcoexist`, ...)
+
+Ghi chú: các họ chưa port ở trên cần thêm mapping chip, firmware path, và HAL mới trước khi có thể dùng trên macOS.
+
 ## Còn thiếu để card chạy thực tế trên macOS
 
 1. Port logic MAC/PHY/PCI đầy đủ từ Linux (`rtw88`/`rtw89`) vào HAL `.cpp`.

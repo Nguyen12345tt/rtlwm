@@ -21,7 +21,8 @@
         { "name": "RTL8852AE", "pci_id": "10ec:8852", "firmware": "rtw8852a_fw.bin" },
         { "name": "RTL8852BE", "pci_id": "10ec:b852", "firmware": "rtw8852b_fw.bin" },
         { "name": "RTL8851BE", "pci_id": "10ec:8851", "firmware": "rtw8851b_fw.bin" },
-        { "name": "RTL8852CE", "pci_id": "10ec:a852", "firmware": "rtw8852c_fw.bin" }
+        { "name": "RTL8852CE", "pci_id": "10ec:a852", "firmware": "rtw8852c_fw.bin" },
+        { "name": "RTL8922AE", "pci_id": "10ec:8922", "firmware": "rtw8922a_fw.bin" }
       ]
     }
   ],

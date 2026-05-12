@@ -133,6 +133,20 @@
 			<key>IOProviderClass</key>
 			<string>IOPCIDevice</string>
 		</dict>
+		<!-- RTL8922AE -->
+		<key>Airportrtlwm_RTL8922AE</key>
+		<dict>
+			<key>CFBundleIdentifier</key>
+			<string>com.rtlwm.airportrtlwm</string>
+			<key>IOClass</key>
+			<string>Airportrtlwm</string>
+			<key>IOPCIPrimaryMatch</key>
+			<string>0x892210EC</string>
+			<key>IOProbeScore</key>
+			<integer>2000</integer>
+			<key>IOProviderClass</key>
+			<string>IOPCIDevice</string>
+		</dict>
 	</dict>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2024 Airportrtlwm Contributors. All rights reserved.</string>
