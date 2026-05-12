@@ -30,6 +30,13 @@ enum rtw89_chip_id {
     RTW89_CHIP_UNKNOWN,
 };
 
+struct rtw89_dma_desc {
+    uint32_t addr_lo;
+    uint32_t addr_hi;
+    uint32_t ctl0;
+    uint32_t ctl1;
+};
+
 /* RTW89 hardware context -------------------------------------------------- */
 struct rtw89_dev {
     IOPCIDevice        *pciDev;
@@ -47,6 +54,10 @@ struct rtw89_dev {
     uint16_t            tx_cons;
     uint16_t            rx_prod;
     uint16_t            rx_cons;
+    struct rtw89_dma_desc *tx_desc;
+    struct rtw89_dma_desc *rx_desc;
+    uint16_t            tx_desc_cnt;
+    uint16_t            rx_desc_cnt;
     bool                efuse_valid;
     bool                iqk_done;
     bool                dpk_done;

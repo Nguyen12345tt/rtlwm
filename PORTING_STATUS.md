@@ -46,8 +46,9 @@ Ghi chú: các họ chưa port ở trên cần thêm mapping chip, firmware path
    - Đã nâng mức “Linux-equivalent” cho bring-up: efuse parsing theo logical map (header/word-enable), calibration IQK/DPK có retry + poll trạng thái, và register tables theo chip đã được mở rộng theo upstream mapping hiện có.
 2. Hoàn thiện đường TX/RX, interrupt, DMA descriptors.
    - Đã có skeleton dispatch interrupt: `rtlwm::handleInterrupt()` -> `RtlHalService::handleInterrupt()`.
-   - Đã có skeleton state TX/RX/IRQ counters trong `hal_rtw88` và `hal_rtw89`.
-   - Chưa có đọc/ack thanh ghi IRQ thật và chưa có descriptor DMA thật.
+   - Đã có đọc + acknowledge thanh ghi IRQ thật (`HISR`/`HIMR`) trong `hal_rtw88` và `hal_rtw89`.
+   - Đã có DMA descriptor ring cơ bản (TX/RX) với cấp phát/khởi tạo/giải phóng vòng đời trong `startTxRx()`/`stopTxRx()`.
+   - Còn thiếu bước map bus address thật cho từng descriptor và nối hoàn chỉnh vào data path TX/RX descriptor engine.
 3. Hoàn thiện IOCTL handlers trong `AirportSTAIOCTL.cpp` và `AirportVirtualIOCTL.cpp`.
 4. Hoàn thiện glue với `ieee80211` stack và state machine kết nối.
 5. Build và ký kext trên macOS + KDK phù hợp.
