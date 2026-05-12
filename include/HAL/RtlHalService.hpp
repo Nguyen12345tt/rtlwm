@@ -20,6 +20,7 @@
 #include <IOKit/pci/IOPCIDevice.h>
 #include <IOKit/network/IOEthernetController.h>
 #include <IOKit/network/IOEthernetInterface.h>
+#include <sys/kpi_mbuf.h>
 
 #include "RtlDriverInfo.hpp"
 #include "RtlDriverController.hpp"
@@ -34,6 +35,7 @@ public:
     virtual void      detach(IOPCIDevice *device)               = 0;
     virtual IOReturn  enable(IONetworkInterface *interface)     = 0;
     virtual IOReturn  disable(IONetworkInterface *interface)    = 0;
+    virtual bool      enqueueTxPacket(mbuf_t packet)            = 0;
     virtual void      handleInterrupt();
 
     virtual struct ieee80211com  *get80211Controller()  = 0;

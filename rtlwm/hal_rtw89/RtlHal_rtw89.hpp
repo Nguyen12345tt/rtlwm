@@ -94,6 +94,7 @@ public:
     void      detach(IOPCIDevice *device)            override;
     IOReturn  enable(IONetworkInterface *interface)  override;
     IOReturn  disable(IONetworkInterface *interface) override;
+    bool      enqueueTxPacket(mbuf_t packet)         override;
     void      handleInterrupt()                      override;
     struct ieee80211com *get80211Controller()        override;
     RtlDriverInfo       *getDriverInfo()             override { return this; }

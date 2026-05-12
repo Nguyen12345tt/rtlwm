@@ -197,6 +197,17 @@ bool Airportrtlwm::configureInterface(IONetworkInterface *netif)
 
 UInt32 Airportrtlwm::outputPacket(mbuf_t m, void *param)
 {
+    (void)param;
+    if (!halService || !ifEnabled) {
+        mbuf_freem(m);
+        return kIOReturnOutputDropped;
+    }
+
+    if (halService->enqueueTxPacket(m)) {
+        mbuf_freem(m);
+        return kIOReturnOutputSuccess;
+    }
+
     mbuf_freem(m);
     return kIOReturnOutputDropped;
 }

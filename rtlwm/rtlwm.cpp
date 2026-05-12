@@ -318,7 +318,11 @@ UInt32 rtlwm::outputPacket(mbuf_t m, void *param)
         return kIOReturnOutputDropped;
     }
 
-    /* TX queue handoff remains pending a dedicated HAL TX API. */
+    if (halService->enqueueTxPacket(m)) {
+        mbuf_freem(m);
+        return kIOReturnOutputSuccess;
+    }
+
     mbuf_freem(m);
     return kIOReturnOutputDropped;
 }

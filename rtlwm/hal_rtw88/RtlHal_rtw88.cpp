@@ -648,6 +648,44 @@ IOReturn RtlHal_rtw88::disable(IONetworkInterface *interface)
     return kIOReturnSuccess;
 }
 
+bool RtlHal_rtw88::enqueueTxPacket(mbuf_t packet)
+{
+    if (!packet || !hw.running || !hw.tx_active || !hw.mmio || !hw.tx_desc_cnt ||
+        !hw.tx_desc || !hw.tx_buf_md)
+        return false;
+
+    hw.tx_cons = getHwRingIdxRtw88(hw.mmio, REG_TXBD_IDX_VOQ);
+    uint16_t prod = hw.tx_prod;
+    uint16_t next = (uint16_t)((prod + 1) % hw.tx_desc_cnt);
+    if (next == hw.tx_cons)
+        return false;
+
+    if (hw.tx_desc[prod].info0 & DESC_OWN)
+        return false;
+
+    uint32_t len = (uint32_t)mbuf_pkthdr_len(packet);
+    if (len == 0)
+        len = (uint32_t)mbuf_len(packet);
+    if (len == 0 || len > RTW88_TX_BUF_SIZE)
+        return false;
+
+    void *dst = hw.tx_buf_md[prod] ? hw.tx_buf_md[prod]->getBytesNoCopy() : nullptr;
+    if (!dst)
+        return false;
+    if (mbuf_copydata(packet, 0, (int)len, (char *)dst) != 0)
+        return false;
+
+    uint32_t info0 = hw.tx_desc[prod].info0;
+    info0 &= ~(DESC_OWN | DESC_LEN_MASK);
+    info0 |= (len & DESC_LEN_MASK);
+    info0 |= DESC_OWN;
+    hw.tx_desc[prod].info0 = info0;
+
+    hw.tx_prod = next;
+    setHostRingIdxRtw88(hw.mmio, REG_TXBD_IDX_VOQ, hw.tx_prod);
+    return true;
+}
+
 void RtlHal_rtw88::handleInterrupt()
 {
     if (!hw.running || !hw.mmio)
