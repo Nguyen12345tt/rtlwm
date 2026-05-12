@@ -16,5 +16,5 @@
  * The actual hardware sleep/wake sequences are handled in the HAL
  * (hal_rtw88 or hal_rtw89) via enable() / disable().
  *
- * TODO: implement full S3/S4 wake logic once the HAL is fleshed out.
+ * Full S3/S4 wake sequencing will be implemented when HAL power hooks land.
  */

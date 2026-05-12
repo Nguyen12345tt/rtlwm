@@ -40,7 +40,7 @@ struct rtw89_dev {
     char                fw_name[64];
     char                fw_version[32];
     bool                running;
-    /* TODO: add CAM tables, BE-specific MAC / phy structs, etc. */
+    /* Pending: CAM tables, BE-specific MAC structures, and PHY state. */
 };
 
 /* --------------------------------------------------------------------------

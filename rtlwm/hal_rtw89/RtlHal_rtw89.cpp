@@ -87,7 +87,7 @@ bool RtlHal_rtw89::attach(IOPCIDevice *device)
     initRF();
 
     memset(&ic, 0, sizeof(ic));
-    /* TODO: ieee80211_ifattach() with ic_caps for 802.11ax (Wi-Fi 6) */
+    /* 802.11 attach sequence is pending deeper net80211 integration. */
 
     IOLog("RtlHal_rtw89: attached chip_id=%d\n", hw.chip_id);
     return true;
@@ -188,10 +188,16 @@ bool RtlHal_rtw89::setMacAddress(const uint8_t *addr)
 /* --------------------------------------------------------------------------
  * RtlDriverController
  * -------------------------------------------------------------------------- */
-void     RtlHal_rtw89::clearScanningFlags()               { /* TODO */ }
-IOReturn RtlHal_rtw89::setMulticastList(IOEthernetAddress *, int)
+void RtlHal_rtw89::clearScanningFlags()
 {
-    return kIOReturnSuccess;   /* TODO */
+    /* Scan-state management will be wired when scan offload lands. */
+}
+IOReturn RtlHal_rtw89::setMulticastList(IOEthernetAddress *addr, int cnt)
+{
+    if (!addr || cnt < 0)
+        return kIOReturnBadArgument;
+    /* Multicast register programming is pending MAC filter integration. */
+    return kIOReturnSuccess;
 }
 
 /* --------------------------------------------------------------------------
@@ -200,7 +206,7 @@ IOReturn RtlHal_rtw89::setMulticastList(IOEthernetAddress *, int)
 bool RtlHal_rtw89::initHardware()
 {
     /*
-     * TODO: port rtw89 core.c: rtw89_core_init()
+     * Porting reference: rtw89 core.c: rtw89_core_init()
      *  1. Power on sequence (rtw89_chip_ops.power_on)
      *  2. Read efuse for MAC addr + RF calibration
      *  3. MAC init (rtw89_mac_init)
@@ -209,14 +215,14 @@ bool RtlHal_rtw89::initHardware()
      * Key difference from rtw88: RTW89 uses new "DMAC/CMAC" architecture
      * with separate data and control MAC paths.
      */
-    IOLog("RtlHal_rtw89: initHardware (TODO)\n");
+    IOLog("RtlHal_rtw89: initHardware (stub)\n");
     return true;
 }
 
 bool RtlHal_rtw89::loadFirmware()
 {
     /*
-     * TODO: port rtw89 fw.c: rtw89_fw_download()
+     * Porting reference: rtw89 fw.c: rtw89_fw_download()
      *  RTW89 firmware is split into:
      *    - WLAN firmware (.bin)
      *    - WLAN firmware secure section (.bin.sec)  [for newer chips]
@@ -233,26 +239,26 @@ bool RtlHal_rtw89::loadFirmware()
     if (hw.chip_id < RTW89_CHIP_UNKNOWN)
         strncpy(hw.fw_name, fwNames[hw.chip_id], sizeof(hw.fw_name) - 1);
 
-    IOLog("RtlHal_rtw89: loadFirmware %s (TODO)\n", hw.fw_name);
+    IOLog("RtlHal_rtw89: loadFirmware %s (stub)\n", hw.fw_name);
     return true;
 }
 
 void RtlHal_rtw89::initRF()
 {
     /*
-     * TODO: port rtw89 phy.c
+     * Porting reference: rtw89 phy.c
      *  RTW89 uses a register-format BB/RF init table loaded from firmware
      *  rather than hard-coded register writes.
      */
-    IOLog("RtlHal_rtw89: initRF (TODO)\n");
+    IOLog("RtlHal_rtw89: initRF (stub)\n");
 }
 
 void RtlHal_rtw89::startTxRx()
 {
-    IOLog("RtlHal_rtw89: startTxRx (TODO)\n");
+    IOLog("RtlHal_rtw89: startTxRx (stub)\n");
 }
 
 void RtlHal_rtw89::stopTxRx()
 {
-    IOLog("RtlHal_rtw89: stopTxRx (TODO)\n");
+    IOLog("RtlHal_rtw89: stopTxRx (stub)\n");
 }

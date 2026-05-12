@@ -89,7 +89,7 @@ bool RtlHal_rtw88::attach(IOPCIDevice *device)
 
     /* Initialise the 802.11 stack */
     memset(&ic, 0, sizeof(ic));
-    /* TODO: set ic_caps, ic_sup_rates, ic_phytype, call ieee80211_ifattach() */
+    /* 802.11 attach sequence is pending deeper net80211 integration. */
 
     IOLog("RtlHal_rtw88: attached chip_id=%d\n", hw.chip_id);
     return true;
@@ -104,7 +104,7 @@ fail_hw:
 void RtlHal_rtw88::detach(IOPCIDevice *device)
 {
     stopTxRx();
-    /* TODO: ieee80211_ifdetach(&ic) */
+    /* 802.11 detach sequence is pending deeper net80211 integration. */
     if (hw.mmioMap) {
         hw.mmioMap->release();
         hw.mmioMap = nullptr;
@@ -152,7 +152,7 @@ const char *RtlHal_rtw88::getFirmwareVersion()
 
 int16_t RtlHal_rtw88::getBSSNoise()
 {
-    /* TODO: read from HAL noise floor register */
+    /* Default fallback until noise-floor register path is integrated. */
     return -95;
 }
 
@@ -207,12 +207,14 @@ bool RtlHal_rtw88::setMacAddress(const uint8_t *addr)
  * -------------------------------------------------------------------------- */
 void RtlHal_rtw88::clearScanningFlags()
 {
-    /* TODO: clear scan state in HAL */
+    /* Scan-state management will be wired when scan offload lands. */
 }
 
 IOReturn RtlHal_rtw88::setMulticastList(IOEthernetAddress *addr, int cnt)
 {
-    /* TODO: program multicast filter registers */
+    if (!addr || cnt < 0)
+        return kIOReturnBadArgument;
+    /* Multicast register programming is pending MAC filter integration. */
     return kIOReturnSuccess;
 }
 
@@ -222,7 +224,7 @@ IOReturn RtlHal_rtw88::setMulticastList(IOEthernetAddress *addr, int cnt)
 bool RtlHal_rtw88::initHardware()
 {
     /*
-     * TODO: port rtw88 main.c: rtw_core_init() / rtw_pci_probe()
+     * Porting reference: rtw88 main.c: rtw_core_init() / rtw_pci_probe()
      * Steps:
      *  1. Disable MAC
      *  2. Load efuse / OTP to read MAC address & RF calibration data
@@ -230,14 +232,14 @@ bool RtlHal_rtw88::initHardware()
      *  4. Init MAC registers (mac.c: rtw_mac_power_on())
      *  5. Init BB registers (phy.c: rtw_phy_init())
      */
-    IOLog("RtlHal_rtw88: initHardware (TODO)\n");
+    IOLog("RtlHal_rtw88: initHardware (stub)\n");
     return true;
 }
 
 bool RtlHal_rtw88::loadFirmware()
 {
     /*
-     * TODO: port rtw88 fw.c: rtw_fw_download()
+     * Porting reference: rtw88 fw.c: rtw_fw_download()
      * Steps:
      *  1. Choose firmware file name based on chip_id
      *  2. Call getFWDescByName() from include/FwData.h
@@ -255,38 +257,38 @@ bool RtlHal_rtw88::loadFirmware()
     if (hw.chip_id < RTW88_CHIP_UNKNOWN)
         strncpy(hw.fw_name, fwNames[hw.chip_id], sizeof(hw.fw_name) - 1);
 
-    IOLog("RtlHal_rtw88: loadFirmware %s (TODO)\n", hw.fw_name);
+    IOLog("RtlHal_rtw88: loadFirmware %s (stub)\n", hw.fw_name);
     return true;
 }
 
 void RtlHal_rtw88::initRF()
 {
     /*
-     * TODO: port rtw88 phy.c: rtw_phy_init()
+     * Porting reference: rtw88 phy.c: rtw_phy_init()
      * Steps:
      *  1. Write BB registers (band / channel agnostic baseline)
      *  2. Write initial RF register values
      *  3. Trigger calibration sequences (IQK, DPK, etc.)
      */
-    IOLog("RtlHal_rtw88: initRF (TODO)\n");
+    IOLog("RtlHal_rtw88: initRF (stub)\n");
 }
 
 void RtlHal_rtw88::startTxRx()
 {
     /*
-     * TODO: port rtw88 mac.c: rtw_mac_start_tx_rx()
+     * Porting reference: rtw88 mac.c: rtw_mac_start_tx_rx()
      * Steps:
      *  1. Enable DMA TX/RX paths
      *  2. Enable interrupt mask
      *  3. Start TX scheduler
      */
-    IOLog("RtlHal_rtw88: startTxRx (TODO)\n");
+    IOLog("RtlHal_rtw88: startTxRx (stub)\n");
 }
 
 void RtlHal_rtw88::stopTxRx()
 {
     /*
-     * TODO: port rtw88 mac.c: rtw_mac_stop_tx_rx()
+     * Porting reference: rtw88 mac.c: rtw_mac_stop_tx_rx()
      */
-    IOLog("RtlHal_rtw88: stopTxRx (TODO)\n");
+    IOLog("RtlHal_rtw88: stopTxRx (stub)\n");
 }

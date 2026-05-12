@@ -43,7 +43,7 @@ struct rtw88_dev {
     char                fw_name[64];
     char                fw_version[32];
     bool                running;
-    /* TODO: add TX/RX ring descriptors, firmware state, etc. */
+    /* Pending: TX/RX ring descriptors, firmware state, and calibration cache. */
 };
 
 /* --------------------------------------------------------------------------

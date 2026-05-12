@@ -288,7 +288,13 @@ bool rtlwm::configureInterface(IONetworkInterface *netif)
 
 UInt32 rtlwm::outputPacket(mbuf_t m, void *param)
 {
-    /* TODO: hand off to HAL TX path */
+    (void)param;
+    if (!halService || !ifRunning) {
+        mbuf_freem(m);
+        return kIOReturnOutputDropped;
+    }
+
+    /* TX queue handoff remains pending a dedicated HAL TX API. */
     mbuf_freem(m);
     return kIOReturnOutputDropped;
 }
@@ -325,7 +331,7 @@ void rtlwm::interruptOccurred(OSObject *owner, IOInterruptEventSource *, int)
 
 void rtlwm::handleInterrupt()
 {
-    /* TODO: forward to HAL interrupt handler */
+    /* Interrupt dispatch to HAL remains pending a dedicated HAL IRQ API. */
 }
 
 void rtlwm::watchdogTimeout(OSObject *owner, IOTimerEventSource *)

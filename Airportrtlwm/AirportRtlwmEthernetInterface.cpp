@@ -15,6 +15,7 @@ bool AirportRtlwmEthernetInterface::init(IONetworkController *controller)
 
 IOReturn AirportRtlwmEthernetInterface::setProperties(OSObject *properties)
 {
-    /* TODO: handle Wi-Fi-specific property requests */
+    if (!properties)
+        return kIOReturnBadArgument;
     return IOEthernetInterface::setProperties(properties);
 }

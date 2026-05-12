@@ -50,7 +50,7 @@ bool Airportrtlwm::start(IOService *provider)
     pciDevice->setBusMasterEnable(true);
 
     /*
-     * TODO: locate and obtain the rtlwm kext HAL service
+     * HAL service binding is pending full multi-kext wiring:
      * (via IOService::waitForMatchingService or direct instantiation)
      * and attach it.
      */
@@ -207,7 +207,19 @@ UInt32 Airportrtlwm::outputPacket(mbuf_t m, void *param)
 
 IOReturn Airportrtlwm::setPowerState(unsigned long ordinal, IOService *)
 {
-    /* TODO: wake / sleep the HAL */
+    if (!halService || !infraInterface)
+        return IOPMAckImplied;
+
+    if (ordinal == 0) {
+        if (ifEnabled) {
+            halService->disable(infraInterface);
+            ifEnabled = false;
+        }
+        return IOPMAckImplied;
+    }
+
+    if (!ifEnabled && halService->enable(infraInterface) == kIOReturnSuccess)
+        ifEnabled = true;
     return IOPMAckImplied;
 }
 
