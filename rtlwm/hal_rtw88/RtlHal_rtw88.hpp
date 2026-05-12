@@ -50,7 +50,14 @@ struct rtw88_dev {
     uint16_t            tx_cons;
     uint16_t            rx_prod;
     uint16_t            rx_cons;
-    /* Pending: TX/RX ring descriptors, firmware state, and calibration cache. */
+    bool                efuse_valid;
+    bool                iqk_done;
+    bool                dpk_done;
+    uint8_t             efuse_map[1024];
+    uint16_t            efuse_len;
+    uint8_t             txpwr_cck;
+    uint8_t             txpwr_ofdm;
+    /* Pending: TX/RX ring descriptors and full firmware runtime state. */
 };
 
 /* --------------------------------------------------------------------------

@@ -47,7 +47,14 @@ struct rtw89_dev {
     uint16_t            tx_cons;
     uint16_t            rx_prod;
     uint16_t            rx_cons;
-    /* Pending: CAM tables, BE-specific MAC structures, and PHY state. */
+    bool                efuse_valid;
+    bool                iqk_done;
+    bool                dpk_done;
+    uint8_t             efuse_map[1024];
+    uint16_t            efuse_len;
+    uint8_t             txpwr_2g;
+    uint8_t             txpwr_5g;
+    /* Pending: CAM tables and BE-specific MAC structures. */
 };
 
 /* --------------------------------------------------------------------------
