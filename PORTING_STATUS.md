@@ -43,7 +43,7 @@ Ghi chú: các họ chưa port ở trên cần thêm mapping chip, firmware path
      - ghi MAC address vào MACID register,
      - poll trạng thái enable.
    - Đã thay `initRF()` stub bằng bảng init PHY theo chip (rtw88/rtw89) để có flow bring-up cụ thể.
-   - Chưa hoàn tất mức “Linux-equivalent”: còn thiếu efuse parsing thật, calibration (IQK/DPK), và toàn bộ register tables đầy đủ từ upstream.
+   - Đã nâng mức “Linux-equivalent” cho bring-up: efuse parsing theo logical map (header/word-enable), calibration IQK/DPK có retry + poll trạng thái, và register tables theo chip đã được mở rộng theo upstream mapping hiện có.
 2. Hoàn thiện đường TX/RX, interrupt, DMA descriptors.
    - Đã có skeleton dispatch interrupt: `rtlwm::handleInterrupt()` -> `RtlHalService::handleInterrupt()`.
    - Đã có skeleton state TX/RX/IRQ counters trong `hal_rtw88` và `hal_rtw89`.

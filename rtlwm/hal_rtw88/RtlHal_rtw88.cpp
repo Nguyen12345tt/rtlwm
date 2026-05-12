@@ -58,6 +58,12 @@ enum : uint32_t {
     REG_RX_PATH       = 0x0820,
     REG_TX_PATH       = 0x0824,
     REG_RF_GAIN       = 0x0828,
+    REG_TXPWR_CCK     = 0x0830,
+    REG_TXPWR_OFDM    = 0x0834,
+    REG_RXCCA_TH      = 0x0838,
+    REG_NAV_CFG       = 0x0504,
+    REG_RETRY_LIMIT   = 0x042A,
+    REG_AMPDU_DENSITY = 0x04CC,
 };
 
 enum : uint32_t {
@@ -133,25 +139,29 @@ static bool writeMacAddressRegs(volatile uint8_t *base, const uint8_t mac[6])
 static const regval32 rtw88_phy_init_8822b[] = {
     { REG_BB_CTRL, 0x00000031 }, { REG_PHY_BW, 0x00000000 }, { REG_PHY_CHAN, 0x00000001 },
     { REG_AGC_CFG, 0x00f0f0f0 }, { REG_RX_PATH, 0x00000003 }, { REG_TX_PATH, 0x00000003 },
-    { REG_RF_GAIN, 0x00000022 }, { REG_EDCA_BE, 0x005EA42B }, { REG_EDCA_BK, 0x0000A44F },
+    { REG_RF_GAIN, 0x00000022 }, { REG_TXPWR_CCK, 0x22222222 }, { REG_TXPWR_OFDM, 0x2A2A2A2A },
+    { REG_RXCCA_TH, 0x00000D0D }, { REG_EDCA_BE, 0x005EA42B }, { REG_EDCA_BK, 0x0000A44F },
     { REG_EDCA_VI, 0x005EA324 }, { REG_EDCA_VO, 0x002FA226 }, { REG_RRSR, 0x000FFFFF },
 };
 static const regval32 rtw88_phy_init_8822c[] = {
     { REG_BB_CTRL, 0x00000033 }, { REG_PHY_BW, 0x00000000 }, { REG_PHY_CHAN, 0x00000001 },
     { REG_AGC_CFG, 0x00e0e0e0 }, { REG_RX_PATH, 0x00000003 }, { REG_TX_PATH, 0x00000003 },
-    { REG_RF_GAIN, 0x00000024 }, { REG_EDCA_BE, 0x005EA42B }, { REG_EDCA_BK, 0x0000A44F },
+    { REG_RF_GAIN, 0x00000024 }, { REG_TXPWR_CCK, 0x23232323 }, { REG_TXPWR_OFDM, 0x2B2B2B2B },
+    { REG_RXCCA_TH, 0x00000C0C }, { REG_EDCA_BE, 0x005EA42B }, { REG_EDCA_BK, 0x0000A44F },
     { REG_EDCA_VI, 0x005EA324 }, { REG_EDCA_VO, 0x002FA226 }, { REG_RRSR, 0x000FFFFF },
 };
 static const regval32 rtw88_phy_init_8723d[] = {
     { REG_BB_CTRL, 0x00000011 }, { REG_PHY_BW, 0x00000000 }, { REG_PHY_CHAN, 0x00000001 },
     { REG_AGC_CFG, 0x00a0a0a0 }, { REG_RX_PATH, 0x00000001 }, { REG_TX_PATH, 0x00000001 },
-    { REG_RF_GAIN, 0x0000001c }, { REG_EDCA_BE, 0x005EA42B }, { REG_EDCA_BK, 0x0000A44F },
+    { REG_RF_GAIN, 0x0000001c }, { REG_TXPWR_CCK, 0x20202020 }, { REG_TXPWR_OFDM, 0x25252525 },
+    { REG_RXCCA_TH, 0x00000A0A }, { REG_EDCA_BE, 0x005EA42B }, { REG_EDCA_BK, 0x0000A44F },
     { REG_EDCA_VI, 0x005EA324 }, { REG_EDCA_VO, 0x002FA226 }, { REG_RRSR, 0x0003FFFF },
 };
 static const regval32 rtw88_phy_init_8821c[] = {
     { REG_BB_CTRL, 0x00000021 }, { REG_PHY_BW, 0x00000000 }, { REG_PHY_CHAN, 0x00000001 },
     { REG_AGC_CFG, 0x00c0c0c0 }, { REG_RX_PATH, 0x00000001 }, { REG_TX_PATH, 0x00000001 },
-    { REG_RF_GAIN, 0x00000020 }, { REG_EDCA_BE, 0x005EA42B }, { REG_EDCA_BK, 0x0000A44F },
+    { REG_RF_GAIN, 0x00000020 }, { REG_TXPWR_CCK, 0x21212121 }, { REG_TXPWR_OFDM, 0x26262626 },
+    { REG_RXCCA_TH, 0x00000B0B }, { REG_EDCA_BE, 0x005EA42B }, { REG_EDCA_BK, 0x0000A44F },
     { REG_EDCA_VI, 0x005EA324 }, { REG_EDCA_VO, 0x002FA226 }, { REG_RRSR, 0x0007FFFF },
 };
 
@@ -159,6 +169,18 @@ static const regval32 rtw88_mac_tbl_common[] = {
     { REG_EDCA_BE, 0x005EA42B }, { REG_EDCA_BK, 0x0000A44F },
     { REG_EDCA_VI, 0x005EA324 }, { REG_EDCA_VO, 0x002FA226 },
     { REG_RRSR, 0x000FFFFF }, { REG_AMPDU_MAX, 0x0000001B },
+    { REG_NAV_CFG, 0x0000A44F }, { REG_RETRY_LIMIT, 0x00000404 },
+    { REG_AMPDU_DENSITY, 0x00000004 },
+};
+
+static const regval32 rtw88_mac_tbl_2ss[] = {
+    { REG_RX_PATH, 0x00000003 },
+    { REG_TX_PATH, 0x00000003 },
+};
+
+static const regval32 rtw88_mac_tbl_1ss[] = {
+    { REG_RX_PATH, 0x00000001 },
+    { REG_TX_PATH, 0x00000001 },
 };
 
 static void applyRegTable(volatile uint8_t *base, const regval32 *tbl, size_t cnt)
@@ -203,13 +225,56 @@ static bool readEfuseMapRtw88(volatile uint8_t *base, uint8_t *out, uint16_t len
     if (!base || !out || len == 0)
         return false;
 
-    uint16_t ffCnt = 0;
-    for (uint16_t i = 0; i < len; i++) {
-        out[i] = mmioRead8(base, REG_EFUSE_BASE + i);
-        if (out[i] == 0xFF)
-            ffCnt++;
+    uint8_t phyMap[1024];
+    uint16_t phyLen = len > sizeof(phyMap) ? (uint16_t)sizeof(phyMap) : len;
+
+    for (uint16_t i = 0; i < phyLen; i++)
+        phyMap[i] = mmioRead8(base, REG_EFUSE_BASE + i);
+
+    memset(out, 0xFF, len);
+    uint16_t idx = 0;
+    while (idx < phyLen) {
+        uint8_t hdr = phyMap[idx++];
+        if (hdr == 0xFF)
+            break;
+
+        uint16_t offset = 0;
+        uint8_t wordEn = hdr & 0x0F;
+        if ((hdr & 0x1F) == 0x0F) {
+            if (idx >= phyLen)
+                break;
+            uint8_t ext = phyMap[idx++];
+            if (ext == 0xFF)
+                break;
+            offset = (uint16_t)(((hdr & 0xE0) >> 5) | ((ext & 0xF0) << 3));
+            wordEn = ext & 0x0F;
+        } else {
+            offset = (uint16_t)(hdr >> 4);
+        }
+
+        if (wordEn == 0x0F)
+            continue;
+
+        for (uint8_t w = 0; w < 4; w++) {
+            if ((wordEn >> w) & 0x1U)
+                continue;
+            if (idx + 1 >= phyLen)
+                return true;
+            uint16_t off = (uint16_t)(offset * 8U + w * 2U);
+            uint8_t lo = phyMap[idx++];
+            uint8_t hi = phyMap[idx++];
+            if (off + 1 < len) {
+                out[off] = lo;
+                out[off + 1] = hi;
+            }
+        }
     }
-    return ffCnt < len;
+
+    for (uint16_t i = 0; i < len; i++) {
+        if (out[i] != 0xFF)
+            return true;
+    }
+    return false;
 }
 
 static bool parseEfuseRtw88(enum rtw88_chip_id chip, const uint8_t *efuse,
@@ -220,14 +285,18 @@ static bool parseEfuseRtw88(enum rtw88_chip_id chip, const uint8_t *efuse,
         return false;
 
     uint16_t macOff = (chip == RTW88_CHIP_8723D) ? 0x11 : 0x10;
+    uint16_t cckOff = (chip == RTW88_CHIP_8723D) ? 0x58 : 0x5A;
+    uint16_t ofdmOff = cckOff + 1;
     if (macOff + 6 > len)
         return false;
     memcpy(mac, efuse + macOff, 6);
+    if (!isValidMacAddr(mac))
+        return false;
 
     if (txpwrCck)
-        *txpwrCck = (0x5A < len) ? efuse[0x5A] : 0x20;
+        *txpwrCck = (cckOff < len && efuse[cckOff] != 0xFF) ? efuse[cckOff] : 0x20;
     if (txpwrOfdm)
-        *txpwrOfdm = (0x5B < len) ? efuse[0x5B] : 0x20;
+        *txpwrOfdm = (ofdmOff < len && efuse[ofdmOff] != 0xFF) ? efuse[ofdmOff] : 0x20;
     return true;
 }
 
@@ -235,12 +304,64 @@ static void runRfkCalibrationRtw88(volatile uint8_t *base, bool *iqkDone, bool *
 {
     if (!base)
         return;
-    mmioWrite32(base, REG_IQK_CTRL, IQK_START);
-    bool iqk = pollReg32(base, REG_IQK_STATUS, IQK_DONE, IQK_DONE, 1000, 20);
-    mmioWrite32(base, REG_DPK_CTRL, DPK_START);
-    bool dpk = pollReg32(base, REG_DPK_STATUS, DPK_DONE, DPK_DONE, 1000, 20);
+
+    uint8_t crBak = mmioRead8(base, REG_CR);
+    mmioWrite8(base, REG_CR, (uint8_t)(crBak & (uint8_t)~CR_TRX_ENABLE));
+
+    bool iqk = false;
+    bool dpk = false;
+    for (int tryN = 0; tryN < 3 && !iqk; tryN++) {
+        mmioWrite32(base, REG_IQK_STATUS, IQK_DONE);
+        mmioWrite32(base, REG_IQK_CTRL, IQK_START);
+        iqk = pollReg32(base, REG_IQK_STATUS, IQK_DONE, IQK_DONE, 1200, 20);
+    }
+    for (int tryN = 0; tryN < 3 && !dpk; tryN++) {
+        mmioWrite32(base, REG_DPK_STATUS, DPK_DONE);
+        mmioWrite32(base, REG_DPK_CTRL, DPK_START);
+        dpk = pollReg32(base, REG_DPK_STATUS, DPK_DONE, DPK_DONE, 1200, 20);
+    }
+
+    mmioWrite8(base, REG_CR, crBak);
     if (iqkDone) *iqkDone = iqk;
     if (dpkDone) *dpkDone = dpk;
+}
+
+static uint8_t sanitizeTxpwrByte(uint8_t v, uint8_t defv)
+{
+    if (v == 0x00 || v == 0xFF)
+        return defv;
+    return v;
+}
+
+static void programTxPowerFromEfuseRtw88(volatile uint8_t *base, uint8_t cck, uint8_t ofdm)
+{
+    if (!base)
+        return;
+    uint32_t cck32 = (uint32_t)cck | ((uint32_t)cck << 8) |
+                     ((uint32_t)cck << 16) | ((uint32_t)cck << 24);
+    uint32_t ofdm32 = (uint32_t)ofdm | ((uint32_t)ofdm << 8) |
+                      ((uint32_t)ofdm << 16) | ((uint32_t)ofdm << 24);
+    mmioWrite32(base, REG_TXPWR_CCK, cck32);
+    mmioWrite32(base, REG_TXPWR_OFDM, ofdm32);
+}
+
+static void applyChipMacTableRtw88(volatile uint8_t *base, enum rtw88_chip_id chip)
+{
+    if (!base)
+        return;
+    switch (chip) {
+    case RTW88_CHIP_8822B:
+    case RTW88_CHIP_8822C:
+        applyRegTable(base, rtw88_mac_tbl_2ss,
+                      sizeof(rtw88_mac_tbl_2ss) / sizeof(rtw88_mac_tbl_2ss[0]));
+        break;
+    case RTW88_CHIP_8723D:
+    case RTW88_CHIP_8821C:
+    default:
+        applyRegTable(base, rtw88_mac_tbl_1ss,
+                      sizeof(rtw88_mac_tbl_1ss) / sizeof(rtw88_mac_tbl_1ss[0]));
+        break;
+    }
 }
 
 static void buildFallbackMac(IOPCIDevice *device, uint8_t mac[6])
@@ -502,14 +623,14 @@ bool RtlHal_rtw88::initHardware()
 
     applyRegTable(hw.mmio, rtw88_mac_tbl_common,
                   sizeof(rtw88_mac_tbl_common) / sizeof(rtw88_mac_tbl_common[0]));
+    applyChipMacTableRtw88(hw.mmio, hw.chip_id);
 
     hw.efuse_len = efuseLenByChip(hw.chip_id);
     hw.efuse_valid = readEfuseMapRtw88(hw.mmio, hw.efuse_map, hw.efuse_len);
     if (hw.efuse_valid) {
         uint8_t efuseMac[6] = {0};
         if (parseEfuseRtw88(hw.chip_id, hw.efuse_map, hw.efuse_len, efuseMac,
-                            &hw.txpwr_cck, &hw.txpwr_ofdm) &&
-            isValidMacAddr(efuseMac)) {
+                            &hw.txpwr_cck, &hw.txpwr_ofdm)) {
             memcpy(hw.mac_addr, efuseMac, sizeof(hw.mac_addr));
         } else {
             hw.efuse_valid = false;
@@ -519,6 +640,9 @@ bool RtlHal_rtw88::initHardware()
         hw.txpwr_cck = 0x20;
         hw.txpwr_ofdm = 0x20;
     }
+    hw.txpwr_cck = sanitizeTxpwrByte(hw.txpwr_cck, 0x20);
+    hw.txpwr_ofdm = sanitizeTxpwrByte(hw.txpwr_ofdm, 0x20);
+    programTxPowerFromEfuseRtw88(hw.mmio, hw.txpwr_cck, hw.txpwr_ofdm);
 
     /* Program current MAC address into MACID0 registers. */
     (void)writeMacAddressRegs(hw.mmio, hw.mac_addr);
@@ -633,8 +757,9 @@ void RtlHal_rtw88::initRF()
     /* RF gate on for later channel/calibration work. */
     mmioWrite8(hw.mmio, REG_RF_CTRL, (uint8_t)(mmioRead8(hw.mmio, REG_RF_CTRL) | 0x01U));
     runRfkCalibrationRtw88(hw.mmio, &hw.iqk_done, &hw.dpk_done);
-    IOLog("RtlHal_rtw88: initRF done chip=%d rf_ctrl=0x%02x\n",
-          hw.chip_id, mmioRead8(hw.mmio, REG_RF_CTRL));
+    IOLog("RtlHal_rtw88: initRF done chip=%d rf_ctrl=0x%02x iqk=%d dpk=%d\n",
+          hw.chip_id, mmioRead8(hw.mmio, REG_RF_CTRL),
+          hw.iqk_done ? 1 : 0, hw.dpk_done ? 1 : 0);
 }
 
 void RtlHal_rtw88::startTxRx()

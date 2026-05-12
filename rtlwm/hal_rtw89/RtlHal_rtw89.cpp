@@ -59,6 +59,10 @@ enum : uint32_t {
     REG_R_AX_CCA_CFG1          = 0x4734,
     REG_R_AX_PATH_COM          = 0x4720,
     REG_R_AX_PATH_COM_2        = 0x4724,
+    REG_R_AX_TXPWR_2G          = 0x46E0,
+    REG_R_AX_TXPWR_5G          = 0x46E4,
+    REG_R_AX_TRXPTCL_CTRL      = 0x1140,
+    REG_R_AX_RESP_RATE         = 0x11B0,
 };
 
 enum : uint32_t {
@@ -122,31 +126,38 @@ static const regval32 rtw89_phy_init_8852a[] = {
     { REG_R_AX_PHY0_RFMOD, 0x00000001 }, { REG_R_AX_PHY0_CHNUM, 0x00000001 },
     { REG_R_AX_CCA_CFG0, 0x00000f3c }, { REG_R_AX_CCA_CFG1, 0x00003030 },
     { REG_R_AX_PATH_COM, 0x00000033 }, { REG_R_AX_PATH_COM_2, 0x00000022 },
+    { REG_R_AX_TXPWR_2G, 0x20202020 }, { REG_R_AX_TXPWR_5G, 0x24242424 },
 };
 static const regval32 rtw89_phy_init_8852b[] = {
     { REG_R_AX_PHY0_RFMOD, 0x00000003 }, { REG_R_AX_PHY0_CHNUM, 0x00000001 },
     { REG_R_AX_CCA_CFG0, 0x00000f5c }, { REG_R_AX_CCA_CFG1, 0x00004040 },
     { REG_R_AX_PATH_COM, 0x00000033 }, { REG_R_AX_PATH_COM_2, 0x00000023 },
+    { REG_R_AX_TXPWR_2G, 0x21212121 }, { REG_R_AX_TXPWR_5G, 0x25252525 },
 };
 static const regval32 rtw89_phy_init_8851b[] = {
     { REG_R_AX_PHY0_RFMOD, 0x00000000 }, { REG_R_AX_PHY0_CHNUM, 0x00000001 },
     { REG_R_AX_CCA_CFG0, 0x00000e3c }, { REG_R_AX_CCA_CFG1, 0x00002020 },
     { REG_R_AX_PATH_COM, 0x00000011 }, { REG_R_AX_PATH_COM_2, 0x00000011 },
+    { REG_R_AX_TXPWR_2G, 0x1F1F1F1F }, { REG_R_AX_TXPWR_5G, 0x23232323 },
 };
 static const regval32 rtw89_phy_init_8852c[] = {
     { REG_R_AX_PHY0_RFMOD, 0x00000005 }, { REG_R_AX_PHY0_CHNUM, 0x00000001 },
     { REG_R_AX_CCA_CFG0, 0x00000f7c }, { REG_R_AX_CCA_CFG1, 0x00005050 },
     { REG_R_AX_PATH_COM, 0x00000033 }, { REG_R_AX_PATH_COM_2, 0x00000024 },
+    { REG_R_AX_TXPWR_2G, 0x22222222 }, { REG_R_AX_TXPWR_5G, 0x26262626 },
 };
 static const regval32 rtw89_phy_init_8922a[] = {
     { REG_R_AX_PHY0_RFMOD, 0x00000007 }, { REG_R_AX_PHY0_CHNUM, 0x00000001 },
     { REG_R_AX_CCA_CFG0, 0x00000ffc }, { REG_R_AX_CCA_CFG1, 0x00006060 },
     { REG_R_AX_PATH_COM, 0x00000033 }, { REG_R_AX_PATH_COM_2, 0x00000033 },
+    { REG_R_AX_TXPWR_2G, 0x24242424 }, { REG_R_AX_TXPWR_5G, 0x28282828 },
 };
 
 static const regval32 rtw89_mac_tbl_common[] = {
     { REG_R_AX_TCR, 0x0000000f },
     { REG_R_AX_RCR, 0x0000001f },
+    { REG_R_AX_TRXPTCL_CTRL, 0x0000003f },
+    { REG_R_AX_RESP_RATE, 0x0000ffff },
 };
 
 static void applyRegTable(volatile uint8_t *base, const regval32 *tbl, size_t cnt)
@@ -186,13 +197,56 @@ static bool readEfuseMapRtw89(volatile uint8_t *base, uint8_t *out, uint16_t len
 {
     if (!base || !out || len == 0)
         return false;
-    uint16_t ffCnt = 0;
-    for (uint16_t i = 0; i < len; i++) {
-        out[i] = (uint8_t)(mmioRead32(base, REG_R_AX_EFUSE_BASE + (i & ~0x3U)) >> ((i & 0x3U) * 8));
-        if (out[i] == 0xFF)
-            ffCnt++;
+
+    uint8_t phyMap[1024];
+    uint16_t phyLen = len > sizeof(phyMap) ? (uint16_t)sizeof(phyMap) : len;
+    for (uint16_t i = 0; i < phyLen; i++)
+        phyMap[i] = (uint8_t)(mmioRead32(base, REG_R_AX_EFUSE_BASE + (i & ~0x3U)) >> ((i & 0x3U) * 8));
+
+    memset(out, 0xFF, len);
+    uint16_t idx = 0;
+    while (idx < phyLen) {
+        uint8_t hdr = phyMap[idx++];
+        if (hdr == 0xFF)
+            break;
+
+        uint16_t offset = 0;
+        uint8_t wordEn = hdr & 0x0F;
+        if ((hdr & 0x1F) == 0x0F) {
+            if (idx >= phyLen)
+                break;
+            uint8_t ext = phyMap[idx++];
+            if (ext == 0xFF)
+                break;
+            offset = (uint16_t)(((hdr & 0xE0) >> 5) | ((ext & 0xF0) << 3));
+            wordEn = ext & 0x0F;
+        } else {
+            offset = (uint16_t)(hdr >> 4);
+        }
+
+        if (wordEn == 0x0F)
+            continue;
+
+        for (uint8_t w = 0; w < 4; w++) {
+            if ((wordEn >> w) & 0x1U)
+                continue;
+            if (idx + 1 >= phyLen)
+                return true;
+            uint16_t off = (uint16_t)(offset * 8U + w * 2U);
+            uint8_t lo = phyMap[idx++];
+            uint8_t hi = phyMap[idx++];
+            if (off + 1 < len) {
+                out[off] = lo;
+                out[off + 1] = hi;
+            }
+        }
     }
-    return ffCnt < len;
+
+    for (uint16_t i = 0; i < len; i++) {
+        if (out[i] != 0xFF)
+            return true;
+    }
+    return false;
 }
 
 static bool parseEfuseRtw89(enum rtw89_chip_id chip, const uint8_t *efuse, uint16_t len,
@@ -201,13 +255,17 @@ static bool parseEfuseRtw89(enum rtw89_chip_id chip, const uint8_t *efuse, uint1
     if (!efuse || !mac || len < 0x80)
         return false;
     uint16_t macOff = (chip == RTW89_CHIP_8922A) ? 0x20 : 0x18;
+    uint16_t p2gOff = (chip == RTW89_CHIP_8922A) ? 0x70 : 0x60;
+    uint16_t p5gOff = p2gOff + 1;
     if (macOff + 6 > len)
         return false;
     memcpy(mac, efuse + macOff, 6);
+    if (!isValidMacAddr(mac))
+        return false;
     if (txpwr2g)
-        *txpwr2g = (0x60 < len) ? efuse[0x60] : 0x20;
+        *txpwr2g = (p2gOff < len && efuse[p2gOff] != 0xFF) ? efuse[p2gOff] : 0x20;
     if (txpwr5g)
-        *txpwr5g = (0x61 < len) ? efuse[0x61] : 0x20;
+        *txpwr5g = (p5gOff < len && efuse[p5gOff] != 0xFF) ? efuse[p5gOff] : 0x20;
     return true;
 }
 
@@ -215,12 +273,45 @@ static void runRfkCalibrationRtw89(volatile uint8_t *base, bool *iqkDone, bool *
 {
     if (!base)
         return;
-    mmioWrite32(base, REG_R_AX_IQK_CTRL, AX_IQK_START);
-    bool iqk = pollReg32(base, REG_R_AX_IQK_STS, AX_IQK_DONE, AX_IQK_DONE, 1500, 20);
-    mmioWrite32(base, REG_R_AX_DPK_CTRL, AX_DPK_START);
-    bool dpk = pollReg32(base, REG_R_AX_DPK_STS, AX_DPK_DONE, AX_DPK_DONE, 1500, 20);
+
+    uint32_t hciBak = mmioRead32(base, REG_R_AX_HCI_FUNC_EN);
+    mmioWrite32(base, REG_R_AX_HCI_FUNC_EN, 0x0U);
+
+    bool iqk = false;
+    bool dpk = false;
+    for (int tryN = 0; tryN < 3 && !iqk; tryN++) {
+        mmioWrite32(base, REG_R_AX_IQK_STS, AX_IQK_DONE);
+        mmioWrite32(base, REG_R_AX_IQK_CTRL, AX_IQK_START);
+        iqk = pollReg32(base, REG_R_AX_IQK_STS, AX_IQK_DONE, AX_IQK_DONE, 1800, 20);
+    }
+    for (int tryN = 0; tryN < 3 && !dpk; tryN++) {
+        mmioWrite32(base, REG_R_AX_DPK_STS, AX_DPK_DONE);
+        mmioWrite32(base, REG_R_AX_DPK_CTRL, AX_DPK_START);
+        dpk = pollReg32(base, REG_R_AX_DPK_STS, AX_DPK_DONE, AX_DPK_DONE, 1800, 20);
+    }
+
+    mmioWrite32(base, REG_R_AX_HCI_FUNC_EN, hciBak);
     if (iqkDone) *iqkDone = iqk;
     if (dpkDone) *dpkDone = dpk;
+}
+
+static uint8_t sanitizeTxpwrByte(uint8_t v, uint8_t defv)
+{
+    if (v == 0x00 || v == 0xFF)
+        return defv;
+    return v;
+}
+
+static void programTxPowerFromEfuseRtw89(volatile uint8_t *base, uint8_t p2g, uint8_t p5g)
+{
+    if (!base)
+        return;
+    uint32_t p2g32 = (uint32_t)p2g | ((uint32_t)p2g << 8) |
+                     ((uint32_t)p2g << 16) | ((uint32_t)p2g << 24);
+    uint32_t p5g32 = (uint32_t)p5g | ((uint32_t)p5g << 8) |
+                     ((uint32_t)p5g << 16) | ((uint32_t)p5g << 24);
+    mmioWrite32(base, REG_R_AX_TXPWR_2G, p2g32);
+    mmioWrite32(base, REG_R_AX_TXPWR_5G, p5g32);
 }
 
 static void buildFallbackMac(IOPCIDevice *device, uint8_t mac[6])
@@ -465,8 +556,7 @@ bool RtlHal_rtw89::initHardware()
     if (hw.efuse_valid) {
         uint8_t efuseMac[6] = {0};
         if (parseEfuseRtw89(hw.chip_id, hw.efuse_map, hw.efuse_len, efuseMac,
-                            &hw.txpwr_2g, &hw.txpwr_5g) &&
-            isValidMacAddr(efuseMac)) {
+                            &hw.txpwr_2g, &hw.txpwr_5g)) {
             memcpy(hw.mac_addr, efuseMac, sizeof(hw.mac_addr));
         } else {
             hw.efuse_valid = false;
@@ -476,6 +566,9 @@ bool RtlHal_rtw89::initHardware()
         hw.txpwr_2g = 0x20;
         hw.txpwr_5g = 0x20;
     }
+    hw.txpwr_2g = sanitizeTxpwrByte(hw.txpwr_2g, 0x20);
+    hw.txpwr_5g = sanitizeTxpwrByte(hw.txpwr_5g, 0x20);
+    programTxPowerFromEfuseRtw89(hw.mmio, hw.txpwr_2g, hw.txpwr_5g);
 
     mmioWrite32(hw.mmio, REG_R_AX_HISR0, 0xFFFFFFFFU);
     mmioWrite32(hw.mmio, REG_R_AX_HIMR0, 0x00000000U);
@@ -592,8 +685,9 @@ void RtlHal_rtw89::initRF()
     }
 
     runRfkCalibrationRtw89(hw.mmio, &hw.iqk_done, &hw.dpk_done);
-    IOLog("RtlHal_rtw89: initRF done chip=%d rfmod=0x%08x\n",
-          hw.chip_id, mmioRead32(hw.mmio, REG_R_AX_PHY0_RFMOD));
+    IOLog("RtlHal_rtw89: initRF done chip=%d rfmod=0x%08x iqk=%d dpk=%d\n",
+          hw.chip_id, mmioRead32(hw.mmio, REG_R_AX_PHY0_RFMOD),
+          hw.iqk_done ? 1 : 0, hw.dpk_done ? 1 : 0);
 }
 
 void RtlHal_rtw89::startTxRx()
