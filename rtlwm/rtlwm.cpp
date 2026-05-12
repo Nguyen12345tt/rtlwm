@@ -365,7 +365,8 @@ void rtlwm::interruptOccurred(OSObject *owner, IOInterruptEventSource *, int)
 
 void rtlwm::handleInterrupt()
 {
-    /* Interrupt dispatch to HAL remains pending a dedicated HAL IRQ API. */
+    if (halService)
+        halService->handleInterrupt();
 }
 
 void rtlwm::watchdogTimeout(OSObject *owner, IOTimerEventSource *)

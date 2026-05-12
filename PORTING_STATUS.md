@@ -37,6 +37,9 @@ Ghi chú: các họ chưa port ở trên cần thêm mapping chip, firmware path
 
 1. Port logic MAC/PHY/PCI đầy đủ từ Linux (`rtw88`/`rtw89`) vào HAL `.cpp`.
 2. Hoàn thiện đường TX/RX, interrupt, DMA descriptors.
+   - Đã có skeleton dispatch interrupt: `rtlwm::handleInterrupt()` -> `RtlHalService::handleInterrupt()`.
+   - Đã có skeleton state TX/RX/IRQ counters trong `hal_rtw88` và `hal_rtw89`.
+   - Chưa có đọc/ack thanh ghi IRQ thật và chưa có descriptor DMA thật.
 3. Hoàn thiện IOCTL handlers trong `AirportSTAIOCTL.cpp` và `AirportVirtualIOCTL.cpp`.
 4. Hoàn thiện glue với `ieee80211` stack và state machine kết nối.
 5. Build và ký kext trên macOS + KDK phù hợp.

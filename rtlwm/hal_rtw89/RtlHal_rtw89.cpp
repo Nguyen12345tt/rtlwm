@@ -146,6 +146,18 @@ IOReturn RtlHal_rtw89::disable(IONetworkInterface *interface)
     return kIOReturnSuccess;
 }
 
+void RtlHal_rtw89::handleInterrupt()
+{
+    if (!hw.running || !hw.mmio)
+        return;
+
+    hw.irq_count++;
+    if ((hw.irq_count & 0x3FFU) == 1U) {
+        IOLog("RtlHal_rtw89: irq=%u tx[%u/%u] rx[%u/%u]\n",
+              hw.irq_count, hw.tx_prod, hw.tx_cons, hw.rx_prod, hw.rx_cons);
+    }
+}
+
 struct ieee80211com *RtlHal_rtw89::get80211Controller() { return &ic; }
 
 void RtlHal_rtw89::free() { RtlHalService::free(); }
@@ -331,6 +343,13 @@ void RtlHal_rtw89::startTxRx()
     }
     hw.pciDev->setMemoryEnable(true);
     hw.pciDev->setBusMasterEnable(true);
+    hw.tx_active = true;
+    hw.rx_active = true;
+    hw.tx_prod = 0;
+    hw.tx_cons = 0;
+    hw.rx_prod = 0;
+    hw.rx_cons = 0;
+    hw.irq_count = 0;
     IOLog("RtlHal_rtw89: startTxRx (pci mem+bm enabled)\n");
 }
 
@@ -342,5 +361,7 @@ void RtlHal_rtw89::stopTxRx()
     }
     hw.pciDev->setBusMasterEnable(false);
     hw.pciDev->setMemoryEnable(false);
+    hw.tx_active = false;
+    hw.rx_active = false;
     IOLog("RtlHal_rtw89: stopTxRx (pci mem+bm disabled)\n");
 }

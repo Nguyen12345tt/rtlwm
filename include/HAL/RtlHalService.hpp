@@ -34,6 +34,7 @@ public:
     virtual void      detach(IOPCIDevice *device)               = 0;
     virtual IOReturn  enable(IONetworkInterface *interface)     = 0;
     virtual IOReturn  disable(IONetworkInterface *interface)    = 0;
+    virtual void      handleInterrupt();
 
     virtual struct ieee80211com  *get80211Controller()  = 0;
     virtual RtlDriverInfo        *getDriverInfo()       = 0;

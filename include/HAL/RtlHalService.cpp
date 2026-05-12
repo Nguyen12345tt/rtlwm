@@ -70,6 +70,11 @@ void RtlHalService::wakeupOn(void *ident)
     wakeup(ident);
 }
 
+void RtlHalService::handleInterrupt()
+{
+    /* Optional HAL hook, overridden by concrete chip families. */
+}
+
 IOEthernetController *RtlHalService::getController()
 {
     return controller;

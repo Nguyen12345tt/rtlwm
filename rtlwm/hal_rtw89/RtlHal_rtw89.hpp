@@ -40,6 +40,13 @@ struct rtw89_dev {
     char                fw_name[64];
     char                fw_version[32];
     bool                running;
+    bool                tx_active;
+    bool                rx_active;
+    uint32_t            irq_count;
+    uint16_t            tx_prod;
+    uint16_t            tx_cons;
+    uint16_t            rx_prod;
+    uint16_t            rx_cons;
     /* Pending: CAM tables, BE-specific MAC structures, and PHY state. */
 };
 
@@ -61,6 +68,7 @@ public:
     void      detach(IOPCIDevice *device)            override;
     IOReturn  enable(IONetworkInterface *interface)  override;
     IOReturn  disable(IONetworkInterface *interface) override;
+    void      handleInterrupt()                      override;
     struct ieee80211com *get80211Controller()        override;
     RtlDriverInfo       *getDriverInfo()             override { return this; }
     RtlDriverController *getDriverController()       override { return this; }
