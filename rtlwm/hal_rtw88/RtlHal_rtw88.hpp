@@ -24,6 +24,8 @@
 #include <HAL/RtlDriverController.hpp>
 #include <net80211/ieee80211_var.h>
 
+class IOBufferMemoryDescriptor;
+
 /* RTW88 chip variant IDs -------------------------------------------------- */
 enum rtw88_chip_id {
     RTW88_CHIP_8822B = 0,
@@ -59,6 +61,12 @@ struct rtw88_dev {
     uint16_t            rx_cons;
     struct rtw88_dma_desc *tx_desc;
     struct rtw88_dma_desc *rx_desc;
+    IOBufferMemoryDescriptor *tx_desc_md;
+    IOBufferMemoryDescriptor *rx_desc_md;
+    IOBufferMemoryDescriptor **tx_buf_md;
+    IOBufferMemoryDescriptor **rx_buf_md;
+    uint64_t            tx_desc_paddr;
+    uint64_t            rx_desc_paddr;
     uint16_t            tx_desc_cnt;
     uint16_t            rx_desc_cnt;
     bool                efuse_valid;
@@ -68,7 +76,7 @@ struct rtw88_dev {
     uint16_t            efuse_len;
     uint8_t             txpwr_cck;
     uint8_t             txpwr_ofdm;
-    /* Pending: TX/RX ring descriptors and full firmware runtime state. */
+    /* Pending: full TX enqueue path from upper network stack. */
 };
 
 /* --------------------------------------------------------------------------

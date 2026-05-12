@@ -48,7 +48,8 @@ Ghi chú: các họ chưa port ở trên cần thêm mapping chip, firmware path
    - Đã có skeleton dispatch interrupt: `rtlwm::handleInterrupt()` -> `RtlHalService::handleInterrupt()`.
    - Đã có đọc + acknowledge thanh ghi IRQ thật (`HISR`/`HIMR`) trong `hal_rtw88` và `hal_rtw89`.
    - Đã có DMA descriptor ring cơ bản (TX/RX) với cấp phát/khởi tạo/giải phóng vòng đời trong `startTxRx()`/`stopTxRx()`.
-   - Còn thiếu bước map bus address thật cho từng descriptor và nối hoàn chỉnh vào data path TX/RX descriptor engine.
+   - Đã map bus address thật cho từng descriptor (ring descriptor + buffer descriptor) và đã nối vào TX/RX descriptor engine qua các thanh ghi DESA/NUM/IDX cùng vòng re-arm RX theo IRQ.
+   - Còn thiếu đường enqueue TX hoàn chỉnh từ `outputPacket()` xuống HAL TX ring.
 3. Hoàn thiện IOCTL handlers trong `AirportSTAIOCTL.cpp` và `AirportVirtualIOCTL.cpp`.
 4. Hoàn thiện glue với `ieee80211` stack và state machine kết nối.
 5. Build và ký kext trên macOS + KDK phù hợp.

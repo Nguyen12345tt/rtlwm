@@ -20,6 +20,8 @@
 #include <HAL/RtlDriverController.hpp>
 #include <net80211/ieee80211_var.h>
 
+class IOBufferMemoryDescriptor;
+
 /* RTW89 chip variant IDs -------------------------------------------------- */
 enum rtw89_chip_id {
     RTW89_CHIP_8852A = 0,
@@ -56,6 +58,12 @@ struct rtw89_dev {
     uint16_t            rx_cons;
     struct rtw89_dma_desc *tx_desc;
     struct rtw89_dma_desc *rx_desc;
+    IOBufferMemoryDescriptor *tx_desc_md;
+    IOBufferMemoryDescriptor *rx_desc_md;
+    IOBufferMemoryDescriptor **tx_buf_md;
+    IOBufferMemoryDescriptor **rx_buf_md;
+    uint64_t            tx_desc_paddr;
+    uint64_t            rx_desc_paddr;
     uint16_t            tx_desc_cnt;
     uint16_t            rx_desc_cnt;
     bool                efuse_valid;
@@ -65,7 +73,7 @@ struct rtw89_dev {
     uint16_t            efuse_len;
     uint8_t             txpwr_2g;
     uint8_t             txpwr_5g;
-    /* Pending: CAM tables and BE-specific MAC structures. */
+    /* Pending: full TX enqueue path, CAM tables and BE-specific MAC structures. */
 };
 
 /* --------------------------------------------------------------------------

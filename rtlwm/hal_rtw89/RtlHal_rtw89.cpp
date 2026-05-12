@@ -23,6 +23,7 @@
 
 #include "RtlHal_rtw89.hpp"
 #include <FwData.h>
+#include <IOKit/IOBufferMemoryDescriptor.h>
 #include <IOKit/IOLib.h>
 #include <libkern/OSByteOrder.h>
 #include <stdio.h>
@@ -63,6 +64,14 @@ enum : uint32_t {
     REG_R_AX_TXPWR_5G          = 0x46E4,
     REG_R_AX_TRXPTCL_CTRL      = 0x1140,
     REG_R_AX_RESP_RATE         = 0x11B0,
+    REG_R_AX_RXQ_RXBD_DESA_L   = 0x1100,
+    REG_R_AX_RXQ_RXBD_DESA_H   = 0x1104,
+    REG_R_AX_ACH0_TXBD_DESA_L  = 0x1110,
+    REG_R_AX_ACH0_TXBD_DESA_H  = 0x1114,
+    REG_R_AX_RXQ_RXBD_NUM      = 0x1020,
+    REG_R_AX_ACH0_TXBD_NUM     = 0x1024,
+    REG_R_AX_RXQ_RXBD_IDX      = 0x1050,
+    REG_R_AX_ACH0_TXBD_IDX     = 0x1058,
 };
 
 enum : uint32_t {
@@ -84,6 +93,11 @@ enum : uint32_t {
                                 RTW89_INT_RX_ERR | RTW89_INT_TX_ERR,
     DESC_OWN                  = (1U << 31),
     DESC_EOR                  = (1U << 30),
+    DESC_LEN_MASK             = 0x0000FFFFU,
+    TRX_BD_IDX_MASK           = 0x00000FFFU,
+    TRX_BD_HW_IDX_SHIFT       = 16,
+    RTW89_TX_BUF_SIZE         = 2048,
+    RTW89_RX_BUF_SIZE         = 2048,
 };
 
 static inline uint16_t mmioRead16(volatile uint8_t *base, uint32_t reg)
@@ -176,18 +190,53 @@ static void applyRegTable(volatile uint8_t *base, const regval32 *tbl, size_t cn
         mmioWrite32(base, tbl[i].reg, tbl[i].val);
 }
 
+static IOBufferMemoryDescriptor *allocDmaMd(size_t size)
+{
+    return IOBufferMemoryDescriptor::inTaskWithPhysicalMask(
+        kernel_task,
+        kIODirectionInOut | kIOMemoryPhysicallyContiguous | kIOMapInhibitCache,
+        size, static_cast<IOPhysicalAddress>(~0ULL));
+}
+
 static void freeDmaRingsRtw89(struct rtw89_dev *hw)
 {
     if (!hw)
         return;
-    if (hw->tx_desc) {
-        IOFree(hw->tx_desc, (size_t)hw->tx_desc_cnt * sizeof(*hw->tx_desc));
-        hw->tx_desc = nullptr;
+
+    if (hw->tx_buf_md) {
+        for (uint16_t i = 0; i < hw->tx_desc_cnt; i++) {
+            if (hw->tx_buf_md[i]) {
+                hw->tx_buf_md[i]->release();
+                hw->tx_buf_md[i] = nullptr;
+            }
+        }
+        IOFree(hw->tx_buf_md, (size_t)hw->tx_desc_cnt * sizeof(*hw->tx_buf_md));
+        hw->tx_buf_md = nullptr;
     }
-    if (hw->rx_desc) {
-        IOFree(hw->rx_desc, (size_t)hw->rx_desc_cnt * sizeof(*hw->rx_desc));
-        hw->rx_desc = nullptr;
+    if (hw->rx_buf_md) {
+        for (uint16_t i = 0; i < hw->rx_desc_cnt; i++) {
+            if (hw->rx_buf_md[i]) {
+                hw->rx_buf_md[i]->release();
+                hw->rx_buf_md[i] = nullptr;
+            }
+        }
+        IOFree(hw->rx_buf_md, (size_t)hw->rx_desc_cnt * sizeof(*hw->rx_buf_md));
+        hw->rx_buf_md = nullptr;
     }
+
+    if (hw->tx_desc_md) {
+        hw->tx_desc_md->release();
+        hw->tx_desc_md = nullptr;
+    }
+    if (hw->rx_desc_md) {
+        hw->rx_desc_md->release();
+        hw->rx_desc_md = nullptr;
+    }
+
+    hw->tx_desc = nullptr;
+    hw->rx_desc = nullptr;
+    hw->tx_desc_paddr = 0;
+    hw->rx_desc_paddr = 0;
     hw->tx_desc_cnt = 0;
     hw->rx_desc_cnt = 0;
 }
@@ -204,28 +253,78 @@ static bool initDmaRingsRtw89(struct rtw89_dev *hw)
     size_t txBytes = (size_t)hw->tx_desc_cnt * sizeof(*hw->tx_desc);
     size_t rxBytes = (size_t)hw->rx_desc_cnt * sizeof(*hw->rx_desc);
 
-    hw->tx_desc = (struct rtw89_dma_desc *)IOMalloc(txBytes);
-    hw->rx_desc = (struct rtw89_dma_desc *)IOMalloc(rxBytes);
-    if (!hw->tx_desc || !hw->rx_desc) {
+    hw->tx_desc_md = allocDmaMd(txBytes);
+    hw->rx_desc_md = allocDmaMd(rxBytes);
+    if (!hw->tx_desc_md || !hw->rx_desc_md) {
         freeDmaRingsRtw89(hw);
         return false;
     }
+
+    hw->tx_desc = (struct rtw89_dma_desc *)hw->tx_desc_md->getBytesNoCopy();
+    hw->rx_desc = (struct rtw89_dma_desc *)hw->rx_desc_md->getBytesNoCopy();
+    hw->tx_desc_paddr = (uint64_t)hw->tx_desc_md->getPhysicalAddress();
+    hw->rx_desc_paddr = (uint64_t)hw->rx_desc_md->getPhysicalAddress();
+    if (!hw->tx_desc || !hw->rx_desc || !hw->tx_desc_paddr || !hw->rx_desc_paddr) {
+        freeDmaRingsRtw89(hw);
+        return false;
+    }
+
+    hw->tx_buf_md = (IOBufferMemoryDescriptor **)IOMalloc(
+        (size_t)hw->tx_desc_cnt * sizeof(*hw->tx_buf_md));
+    hw->rx_buf_md = (IOBufferMemoryDescriptor **)IOMalloc(
+        (size_t)hw->rx_desc_cnt * sizeof(*hw->rx_buf_md));
+    if (!hw->tx_buf_md || !hw->rx_buf_md) {
+        freeDmaRingsRtw89(hw);
+        return false;
+    }
+    memset(hw->tx_buf_md, 0, (size_t)hw->tx_desc_cnt * sizeof(*hw->tx_buf_md));
+    memset(hw->rx_buf_md, 0, (size_t)hw->rx_desc_cnt * sizeof(*hw->rx_buf_md));
 
     memset(hw->tx_desc, 0, txBytes);
     memset(hw->rx_desc, 0, rxBytes);
 
     for (uint16_t i = 0; i < hw->tx_desc_cnt; i++) {
-        hw->tx_desc[i].ctl0 = DESC_OWN;
+        hw->tx_buf_md[i] = allocDmaMd(RTW89_TX_BUF_SIZE);
+        if (!hw->tx_buf_md[i]) {
+            freeDmaRingsRtw89(hw);
+            return false;
+        }
+        uint64_t paddr = (uint64_t)hw->tx_buf_md[i]->getPhysicalAddress();
+        hw->tx_desc[i].addr_lo = (uint32_t)paddr;
+        hw->tx_desc[i].addr_hi = (uint32_t)(paddr >> 32);
+        hw->tx_desc[i].ctl0 = (uint32_t)(RTW89_TX_BUF_SIZE & DESC_LEN_MASK);
         if (i == (uint16_t)(hw->tx_desc_cnt - 1))
             hw->tx_desc[i].ctl1 |= DESC_EOR;
     }
     for (uint16_t i = 0; i < hw->rx_desc_cnt; i++) {
-        hw->rx_desc[i].ctl0 = DESC_OWN;
+        hw->rx_buf_md[i] = allocDmaMd(RTW89_RX_BUF_SIZE);
+        if (!hw->rx_buf_md[i]) {
+            freeDmaRingsRtw89(hw);
+            return false;
+        }
+        uint64_t paddr = (uint64_t)hw->rx_buf_md[i]->getPhysicalAddress();
+        hw->rx_desc[i].addr_lo = (uint32_t)paddr;
+        hw->rx_desc[i].addr_hi = (uint32_t)(paddr >> 32);
+        hw->rx_desc[i].ctl0 = DESC_OWN | (uint32_t)(RTW89_RX_BUF_SIZE & DESC_LEN_MASK);
         if (i == (uint16_t)(hw->rx_desc_cnt - 1))
             hw->rx_desc[i].ctl1 |= DESC_EOR;
     }
 
     return true;
+}
+
+static uint16_t getHwRingIdxRtw89(volatile uint8_t *base, uint32_t reg)
+{
+    uint32_t v = mmioRead32(base, reg);
+    return (uint16_t)((v >> TRX_BD_HW_IDX_SHIFT) & TRX_BD_IDX_MASK);
+}
+
+static void setHostRingIdxRtw89(volatile uint8_t *base, uint32_t reg, uint16_t host)
+{
+    uint32_t v = mmioRead32(base, reg);
+    v &= ~TRX_BD_IDX_MASK;
+    v |= (uint32_t)(host & TRX_BD_IDX_MASK);
+    mmioWrite32(base, reg, v);
 }
 
 static bool isValidMacAddr(const uint8_t mac[6])
@@ -505,13 +604,19 @@ void RtlHal_rtw89::handleInterrupt()
 
     hw.irq_count++;
     if (isr & RTW89_INT_TX_DONE) {
-        uint16_t mod = hw.tx_desc_cnt ? hw.tx_desc_cnt : 1;
-        hw.tx_cons = (uint16_t)((hw.tx_cons + 1) % mod);
+        hw.tx_cons = getHwRingIdxRtw89(hw.mmio, REG_R_AX_ACH0_TXBD_IDX);
     }
     if (isr & RTW89_INT_RX_DONE) {
-        uint16_t mod = hw.rx_desc_cnt ? hw.rx_desc_cnt : 1;
-        hw.rx_prod = (uint16_t)((hw.rx_prod + 1) % mod);
-        hw.rx_cons = hw.rx_prod;
+        uint16_t hwRxIdx = getHwRingIdxRtw89(hw.mmio, REG_R_AX_RXQ_RXBD_IDX);
+        if (hw.rx_desc_cnt) {
+            while (hw.rx_cons != hwRxIdx) {
+                uint16_t idx = hw.rx_cons;
+                hw.rx_desc[idx].ctl0 = DESC_OWN | (uint32_t)(RTW89_RX_BUF_SIZE & DESC_LEN_MASK);
+                hw.rx_cons = (uint16_t)((hw.rx_cons + 1) % hw.rx_desc_cnt);
+            }
+            hw.rx_prod = hw.rx_cons;
+            setHostRingIdxRtw89(hw.mmio, REG_R_AX_RXQ_RXBD_IDX, hw.rx_prod);
+        }
     }
     if (isr & (RTW89_INT_RX_ERR | RTW89_INT_TX_ERR)) {
         IOLog("RtlHal_rtw89: irq error isr=0x%08x\n", isr);
@@ -792,6 +897,14 @@ void RtlHal_rtw89::startTxRx()
         mmioWrite32(hw.mmio, REG_R_AX_DMAC_FUNC_EN, AX_DMAC_ENABLE);
         mmioWrite32(hw.mmio, REG_R_AX_CMAC_FUNC_EN, AX_CMAC_ENABLE);
         mmioWrite32(hw.mmio, REG_R_AX_HCI_FUNC_EN, AX_HCI_TRX_ENABLE);
+        mmioWrite32(hw.mmio, REG_R_AX_ACH0_TXBD_DESA_L, (uint32_t)hw.tx_desc_paddr);
+        mmioWrite32(hw.mmio, REG_R_AX_ACH0_TXBD_DESA_H, (uint32_t)(hw.tx_desc_paddr >> 32));
+        mmioWrite32(hw.mmio, REG_R_AX_RXQ_RXBD_DESA_L, (uint32_t)hw.rx_desc_paddr);
+        mmioWrite32(hw.mmio, REG_R_AX_RXQ_RXBD_DESA_H, (uint32_t)(hw.rx_desc_paddr >> 32));
+        mmioWrite16(hw.mmio, REG_R_AX_ACH0_TXBD_NUM, hw.tx_desc_cnt);
+        mmioWrite16(hw.mmio, REG_R_AX_RXQ_RXBD_NUM, hw.rx_desc_cnt);
+        setHostRingIdxRtw89(hw.mmio, REG_R_AX_ACH0_TXBD_IDX, 0);
+        setHostRingIdxRtw89(hw.mmio, REG_R_AX_RXQ_RXBD_IDX, 0);
         mmioWrite32(hw.mmio, REG_R_AX_HIMR0, RTW89_IRQ_MASK);
         mmioWrite32(hw.mmio, REG_R_AX_HISR0, 0xFFFFFFFFU);
     }
