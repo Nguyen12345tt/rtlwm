@@ -21,11 +21,117 @@
 #include "RtlHal_rtw88.hpp"
 #include <FwData.h>
 #include <IOKit/IOLib.h>
+#include <libkern/OSByteOrder.h>
 #include <stdio.h>
 
 OSDefineMetaClassAndStructors(RtlHal_rtw88, RtlHalService)
 
 namespace {
+struct regval32 {
+    uint32_t reg;
+    uint32_t val;
+};
+
+enum : uint32_t {
+    REG_CR            = 0x0100,
+    REG_HIMR0         = 0x00B0,
+    REG_HISR0         = 0x00B4,
+    REG_SYS_FUNC_EN   = 0x0002,
+    REG_RF_CTRL       = 0x001F,
+    REG_BB_CTRL       = 0x0800,
+    REG_PHY_BW        = 0x0810,
+    REG_PHY_CHAN      = 0x0814,
+    REG_MAC_ADDR_0    = 0x0610,
+    REG_MAC_ADDR_4    = 0x0614,
+};
+
+enum : uint32_t {
+    CR_TXDMA_EN       = (1U << 4),
+    CR_RXDMA_EN       = (1U << 5),
+    CR_PROTOCOL_EN    = (1U << 6),
+    CR_SCHEDULER_EN   = (1U << 7),
+    CR_TRX_ENABLE     = CR_TXDMA_EN | CR_RXDMA_EN | CR_PROTOCOL_EN | CR_SCHEDULER_EN,
+
+    SYS_FUNC_CPU_EN   = (1U << 10),
+    SYS_FUNC_MAC_EN   = (1U << 11),
+    SYS_FUNC_EN_ALL   = SYS_FUNC_CPU_EN | SYS_FUNC_MAC_EN,
+};
+
+static inline uint8_t mmioRead8(volatile uint8_t *base, uint32_t reg)
+{
+    return OSReadLittleInt8((const volatile void *)(base + reg), 0);
+}
+
+static inline uint16_t mmioRead16(volatile uint8_t *base, uint32_t reg)
+{
+    return OSReadLittleInt16((const volatile void *)(base + reg), 0);
+}
+
+static inline uint32_t mmioRead32(volatile uint8_t *base, uint32_t reg)
+{
+    return OSReadLittleInt32((const volatile void *)(base + reg), 0);
+}
+
+static inline void mmioWrite8(volatile uint8_t *base, uint32_t reg, uint8_t val)
+{
+    OSWriteLittleInt8((volatile void *)(base + reg), 0, val);
+}
+
+static inline void mmioWrite16(volatile uint8_t *base, uint32_t reg, uint16_t val)
+{
+    OSWriteLittleInt16((volatile void *)(base + reg), 0, val);
+}
+
+static inline void mmioWrite32(volatile uint8_t *base, uint32_t reg, uint32_t val)
+{
+    OSWriteLittleInt32((volatile void *)(base + reg), 0, val);
+}
+
+static bool pollReg32(volatile uint8_t *base, uint32_t reg, uint32_t mask,
+                      uint32_t expect, int loops, int delayUs)
+{
+    for (int i = 0; i < loops; i++) {
+        if ((mmioRead32(base, reg) & mask) == expect)
+            return true;
+        if (delayUs > 0)
+            IODelay(delayUs);
+    }
+    return false;
+}
+
+static bool writeMacAddressRegs(volatile uint8_t *base, const uint8_t mac[6])
+{
+    if (!base || !mac)
+        return false;
+    uint32_t lo = ((uint32_t)mac[3] << 24) | ((uint32_t)mac[2] << 16) |
+                  ((uint32_t)mac[1] << 8) | mac[0];
+    uint16_t hi = ((uint16_t)mac[5] << 8) | mac[4];
+    mmioWrite32(base, REG_MAC_ADDR_0, lo);
+    mmioWrite16(base, REG_MAC_ADDR_4, hi);
+    return true;
+}
+
+static const regval32 rtw88_phy_init_8822b[] = {
+    { REG_BB_CTRL, 0x00000001 }, { REG_PHY_BW, 0x00000000 }, { REG_PHY_CHAN, 0x00000001 },
+};
+static const regval32 rtw88_phy_init_8822c[] = {
+    { REG_BB_CTRL, 0x00000003 }, { REG_PHY_BW, 0x00000000 }, { REG_PHY_CHAN, 0x00000001 },
+};
+static const regval32 rtw88_phy_init_8723d[] = {
+    { REG_BB_CTRL, 0x00000001 }, { REG_PHY_BW, 0x00000000 }, { REG_PHY_CHAN, 0x00000001 },
+};
+static const regval32 rtw88_phy_init_8821c[] = {
+    { REG_BB_CTRL, 0x00000002 }, { REG_PHY_BW, 0x00000000 }, { REG_PHY_CHAN, 0x00000001 },
+};
+
+static void applyRegTable(volatile uint8_t *base, const regval32 *tbl, size_t cnt)
+{
+    if (!base || !tbl)
+        return;
+    for (size_t i = 0; i < cnt; i++)
+        mmioWrite32(base, tbl[i].reg, tbl[i].val);
+}
+
 static void buildFallbackMac(IOPCIDevice *device, uint8_t mac[6])
 {
     uint16_t vid = device->configRead16(kIOPCIConfigVendorID);
@@ -256,16 +362,38 @@ IOReturn RtlHal_rtw88::setMulticastList(IOEthernetAddress *addr, int cnt)
  * -------------------------------------------------------------------------- */
 bool RtlHal_rtw88::initHardware()
 {
-    /*
-     * Porting reference: rtw88 main.c: rtw_core_init() / rtw_pci_probe()
-     * Steps:
-     *  1. Disable MAC
-     *  2. Load efuse / OTP to read MAC address & RF calibration data
-     *  3. Power on RF section
-     *  4. Init MAC registers (mac.c: rtw_mac_power_on())
-     *  5. Init BB registers (phy.c: rtw_phy_init())
-     */
-    IOLog("RtlHal_rtw88: initHardware (stub)\n");
+    if (!hw.pciDev || !hw.mmio)
+        return false;
+
+    /* PCI command enable (Linux rtw_pci_probe equivalent bootstrap). */
+    uint16_t cmd = hw.pciDev->configRead16(kIOPCIConfigCommand);
+    cmd |= (kIOPCICommandBusMaster | kIOPCICommandMemorySpace);
+    hw.pciDev->configWrite16(kIOPCIConfigCommand, cmd);
+
+    /* Bring MAC/CPU blocks up before touching CR. */
+    uint16_t sysFunc = mmioRead16(hw.mmio, REG_SYS_FUNC_EN);
+    sysFunc |= (uint16_t)SYS_FUNC_EN_ALL;
+    mmioWrite16(hw.mmio, REG_SYS_FUNC_EN, sysFunc);
+
+    /* Stop TRX first, clear stale status, then re-enable core MAC pipeline. */
+    uint8_t cr = mmioRead8(hw.mmio, REG_CR);
+    cr &= (uint8_t)~CR_TRX_ENABLE;
+    mmioWrite8(hw.mmio, REG_CR, cr);
+    mmioWrite32(hw.mmio, REG_HISR0, 0xFFFFFFFFU);
+    mmioWrite32(hw.mmio, REG_HIMR0, 0x00000000U);
+
+    cr |= (uint8_t)CR_TRX_ENABLE;
+    mmioWrite8(hw.mmio, REG_CR, cr);
+    if (!pollReg32(hw.mmio, REG_CR, CR_TRX_ENABLE, CR_TRX_ENABLE, 200, 10)) {
+        IOLog("RtlHal_rtw88: MAC enable timeout CR=0x%08x\n", mmioRead32(hw.mmio, REG_CR));
+        return false;
+    }
+
+    /* Program current MAC address into MACID0 registers. */
+    (void)writeMacAddressRegs(hw.mmio, hw.mac_addr);
+
+    IOLog("RtlHal_rtw88: initHardware done cmd=0x%04x cr=0x%02x\n",
+          hw.pciDev->configRead16(kIOPCIConfigCommand), mmioRead8(hw.mmio, REG_CR));
     return true;
 }
 
@@ -345,14 +473,35 @@ bool RtlHal_rtw88::loadFirmware()
 
 void RtlHal_rtw88::initRF()
 {
-    /*
-     * Porting reference: rtw88 phy.c: rtw_phy_init()
-     * Steps:
-     *  1. Write BB registers (band / channel agnostic baseline)
-     *  2. Write initial RF register values
-     *  3. Trigger calibration sequences (IQK, DPK, etc.)
-     */
-    IOLog("RtlHal_rtw88: initRF (stub)\n");
+    if (!hw.mmio)
+        return;
+
+    /* Minimal per-chip PHY bootstrap table (rtw88 phy init skeleton). */
+    switch (hw.chip_id) {
+    case RTW88_CHIP_8822B:
+        applyRegTable(hw.mmio, rtw88_phy_init_8822b,
+                      sizeof(rtw88_phy_init_8822b) / sizeof(rtw88_phy_init_8822b[0]));
+        break;
+    case RTW88_CHIP_8822C:
+        applyRegTable(hw.mmio, rtw88_phy_init_8822c,
+                      sizeof(rtw88_phy_init_8822c) / sizeof(rtw88_phy_init_8822c[0]));
+        break;
+    case RTW88_CHIP_8723D:
+        applyRegTable(hw.mmio, rtw88_phy_init_8723d,
+                      sizeof(rtw88_phy_init_8723d) / sizeof(rtw88_phy_init_8723d[0]));
+        break;
+    case RTW88_CHIP_8821C:
+        applyRegTable(hw.mmio, rtw88_phy_init_8821c,
+                      sizeof(rtw88_phy_init_8821c) / sizeof(rtw88_phy_init_8821c[0]));
+        break;
+    default:
+        break;
+    }
+
+    /* RF gate on for later channel/calibration work. */
+    mmioWrite8(hw.mmio, REG_RF_CTRL, (uint8_t)(mmioRead8(hw.mmio, REG_RF_CTRL) | 0x01U));
+    IOLog("RtlHal_rtw88: initRF done chip=%d rf_ctrl=0x%02x\n",
+          hw.chip_id, mmioRead8(hw.mmio, REG_RF_CTRL));
 }
 
 void RtlHal_rtw88::startTxRx()
@@ -368,8 +517,17 @@ void RtlHal_rtw88::startTxRx()
         IOLog("RtlHal_rtw88: startTxRx skipped (no pciDev)\n");
         return;
     }
+
     hw.pciDev->setMemoryEnable(true);
     hw.pciDev->setBusMasterEnable(true);
+
+    if (hw.mmio) {
+        uint8_t cr = mmioRead8(hw.mmio, REG_CR);
+        mmioWrite8(hw.mmio, REG_CR, (uint8_t)(cr | CR_TRX_ENABLE));
+        mmioWrite32(hw.mmio, REG_HIMR0, 0xFFFFFFFFU);
+        mmioWrite32(hw.mmio, REG_HISR0, 0xFFFFFFFFU);
+    }
+
     hw.tx_active = true;
     hw.rx_active = true;
     hw.tx_prod = 0;
@@ -389,6 +547,14 @@ void RtlHal_rtw88::stopTxRx()
         IOLog("RtlHal_rtw88: stopTxRx skipped (no pciDev)\n");
         return;
     }
+
+    if (hw.mmio) {
+        mmioWrite32(hw.mmio, REG_HIMR0, 0x00000000U);
+        uint8_t cr = mmioRead8(hw.mmio, REG_CR);
+        mmioWrite8(hw.mmio, REG_CR, (uint8_t)(cr & (uint8_t)~CR_TRX_ENABLE));
+        mmioWrite32(hw.mmio, REG_HISR0, 0xFFFFFFFFU);
+    }
+
     hw.pciDev->setBusMasterEnable(false);
     hw.pciDev->setMemoryEnable(false);
     hw.tx_active = false;

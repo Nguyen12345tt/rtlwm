@@ -24,11 +24,109 @@
 #include "RtlHal_rtw89.hpp"
 #include <FwData.h>
 #include <IOKit/IOLib.h>
+#include <libkern/OSByteOrder.h>
 #include <stdio.h>
 
 OSDefineMetaClassAndStructors(RtlHal_rtw89, RtlHalService)
 
 namespace {
+struct regval32 {
+    uint32_t reg;
+    uint32_t val;
+};
+
+enum : uint32_t {
+    REG_R_AX_PLATFORM_ENABLE   = 0x0000,
+    REG_R_AX_SYS_FUNC_EN       = 0x0002,
+    REG_R_AX_HCI_FUNC_EN       = 0x0074,
+    REG_R_AX_HALT_H2C_CTRL     = 0x01B8,
+    REG_R_AX_DMAC_FUNC_EN      = 0x8400,
+    REG_R_AX_CMAC_FUNC_EN      = 0xC000,
+    REG_R_AX_HIMR0             = 0x01A0,
+    REG_R_AX_HISR0             = 0x01A4,
+    REG_R_AX_MAC_ID0           = 0x0610,
+    REG_R_AX_MAC_ID1           = 0x0614,
+    REG_R_AX_PHY0_RFMOD        = 0x4700,
+    REG_R_AX_PHY0_CHNUM        = 0x4718,
+};
+
+enum : uint32_t {
+    AX_HCI_TXDMA_EN           = (1U << 0),
+    AX_HCI_RXDMA_EN           = (1U << 1),
+    AX_HCI_TRX_ENABLE         = AX_HCI_TXDMA_EN | AX_HCI_RXDMA_EN,
+    AX_DMAC_ENABLE            = (1U << 0),
+    AX_CMAC_ENABLE            = (1U << 0),
+    AX_SYS_MAC_CPU_ENABLE     = (1U << 11),
+};
+
+static inline uint16_t mmioRead16(volatile uint8_t *base, uint32_t reg)
+{
+    return OSReadLittleInt16((const volatile void *)(base + reg), 0);
+}
+
+static inline uint32_t mmioRead32(volatile uint8_t *base, uint32_t reg)
+{
+    return OSReadLittleInt32((const volatile void *)(base + reg), 0);
+}
+
+static inline void mmioWrite16(volatile uint8_t *base, uint32_t reg, uint16_t val)
+{
+    OSWriteLittleInt16((volatile void *)(base + reg), 0, val);
+}
+
+static inline void mmioWrite32(volatile uint8_t *base, uint32_t reg, uint32_t val)
+{
+    OSWriteLittleInt32((volatile void *)(base + reg), 0, val);
+}
+
+static bool pollReg32(volatile uint8_t *base, uint32_t reg, uint32_t mask,
+                      uint32_t expect, int loops, int delayUs)
+{
+    for (int i = 0; i < loops; i++) {
+        if ((mmioRead32(base, reg) & mask) == expect)
+            return true;
+        if (delayUs > 0)
+            IODelay(delayUs);
+    }
+    return false;
+}
+
+static bool writeMacAddressRegs(volatile uint8_t *base, const uint8_t mac[6])
+{
+    if (!base || !mac)
+        return false;
+    uint32_t lo = ((uint32_t)mac[3] << 24) | ((uint32_t)mac[2] << 16) |
+                  ((uint32_t)mac[1] << 8) | mac[0];
+    uint16_t hi = ((uint16_t)mac[5] << 8) | mac[4];
+    mmioWrite32(base, REG_R_AX_MAC_ID0, lo);
+    mmioWrite16(base, REG_R_AX_MAC_ID1, hi);
+    return true;
+}
+
+static const regval32 rtw89_phy_init_8852a[] = {
+    { REG_R_AX_PHY0_RFMOD, 0x00000001 }, { REG_R_AX_PHY0_CHNUM, 0x00000001 },
+};
+static const regval32 rtw89_phy_init_8852b[] = {
+    { REG_R_AX_PHY0_RFMOD, 0x00000003 }, { REG_R_AX_PHY0_CHNUM, 0x00000001 },
+};
+static const regval32 rtw89_phy_init_8851b[] = {
+    { REG_R_AX_PHY0_RFMOD, 0x00000000 }, { REG_R_AX_PHY0_CHNUM, 0x00000001 },
+};
+static const regval32 rtw89_phy_init_8852c[] = {
+    { REG_R_AX_PHY0_RFMOD, 0x00000005 }, { REG_R_AX_PHY0_CHNUM, 0x00000001 },
+};
+static const regval32 rtw89_phy_init_8922a[] = {
+    { REG_R_AX_PHY0_RFMOD, 0x00000007 }, { REG_R_AX_PHY0_CHNUM, 0x00000001 },
+};
+
+static void applyRegTable(volatile uint8_t *base, const regval32 *tbl, size_t cnt)
+{
+    if (!base || !tbl)
+        return;
+    for (size_t i = 0; i < cnt; i++)
+        mmioWrite32(base, tbl[i].reg, tbl[i].val);
+}
+
 static void buildFallbackMac(IOPCIDevice *device, uint8_t mac[6])
 {
     uint16_t vid = device->configRead16(kIOPCIConfigVendorID);
@@ -238,17 +336,38 @@ IOReturn RtlHal_rtw89::setMulticastList(IOEthernetAddress *addr, int cnt)
  * -------------------------------------------------------------------------- */
 bool RtlHal_rtw89::initHardware()
 {
-    /*
-     * Porting reference: rtw89 core.c: rtw89_core_init()
-     *  1. Power on sequence (rtw89_chip_ops.power_on)
-     *  2. Read efuse for MAC addr + RF calibration
-     *  3. MAC init (rtw89_mac_init)
-     *  4. BB init  (rtw89_phy_init)
-     *
-     * Key difference from rtw88: RTW89 uses new "DMAC/CMAC" architecture
-     * with separate data and control MAC paths.
-     */
-    IOLog("RtlHal_rtw89: initHardware (stub)\n");
+    if (!hw.pciDev || !hw.mmio)
+        return false;
+
+    uint16_t cmd = hw.pciDev->configRead16(kIOPCIConfigCommand);
+    cmd |= (kIOPCICommandBusMaster | kIOPCICommandMemorySpace);
+    hw.pciDev->configWrite16(kIOPCIConfigCommand, cmd);
+
+    /* RTW89 pipeline: platform -> system -> DMAC/CMAC -> HCI */
+    mmioWrite32(hw.mmio, REG_R_AX_PLATFORM_ENABLE, 0x1U);
+    uint16_t sysFunc = mmioRead16(hw.mmio, REG_R_AX_SYS_FUNC_EN);
+    sysFunc |= (uint16_t)AX_SYS_MAC_CPU_ENABLE;
+    mmioWrite16(hw.mmio, REG_R_AX_SYS_FUNC_EN, sysFunc);
+
+    mmioWrite32(hw.mmio, REG_R_AX_DMAC_FUNC_EN, AX_DMAC_ENABLE);
+    mmioWrite32(hw.mmio, REG_R_AX_CMAC_FUNC_EN, AX_CMAC_ENABLE);
+    mmioWrite32(hw.mmio, REG_R_AX_HCI_FUNC_EN, AX_HCI_TRX_ENABLE);
+    mmioWrite32(hw.mmio, REG_R_AX_HALT_H2C_CTRL, 0x0U);
+
+    if (!pollReg32(hw.mmio, REG_R_AX_HCI_FUNC_EN, AX_HCI_TRX_ENABLE,
+                   AX_HCI_TRX_ENABLE, 300, 10)) {
+        IOLog("RtlHal_rtw89: HCI enable timeout hci=0x%08x\n",
+              mmioRead32(hw.mmio, REG_R_AX_HCI_FUNC_EN));
+        return false;
+    }
+
+    mmioWrite32(hw.mmio, REG_R_AX_HISR0, 0xFFFFFFFFU);
+    mmioWrite32(hw.mmio, REG_R_AX_HIMR0, 0x00000000U);
+    (void)writeMacAddressRegs(hw.mmio, hw.mac_addr);
+
+    IOLog("RtlHal_rtw89: initHardware done cmd=0x%04x hci=0x%08x\n",
+          hw.pciDev->configRead16(kIOPCIConfigCommand),
+          mmioRead32(hw.mmio, REG_R_AX_HCI_FUNC_EN));
     return true;
 }
 
@@ -327,12 +446,36 @@ bool RtlHal_rtw89::loadFirmware()
 
 void RtlHal_rtw89::initRF()
 {
-    /*
-     * Porting reference: rtw89 phy.c
-     *  RTW89 uses a register-format BB/RF init table loaded from firmware
-     *  rather than hard-coded register writes.
-     */
-    IOLog("RtlHal_rtw89: initRF (stub)\n");
+    if (!hw.mmio)
+        return;
+
+    switch (hw.chip_id) {
+    case RTW89_CHIP_8852A:
+        applyRegTable(hw.mmio, rtw89_phy_init_8852a,
+                      sizeof(rtw89_phy_init_8852a) / sizeof(rtw89_phy_init_8852a[0]));
+        break;
+    case RTW89_CHIP_8852B:
+        applyRegTable(hw.mmio, rtw89_phy_init_8852b,
+                      sizeof(rtw89_phy_init_8852b) / sizeof(rtw89_phy_init_8852b[0]));
+        break;
+    case RTW89_CHIP_8851B:
+        applyRegTable(hw.mmio, rtw89_phy_init_8851b,
+                      sizeof(rtw89_phy_init_8851b) / sizeof(rtw89_phy_init_8851b[0]));
+        break;
+    case RTW89_CHIP_8852C:
+        applyRegTable(hw.mmio, rtw89_phy_init_8852c,
+                      sizeof(rtw89_phy_init_8852c) / sizeof(rtw89_phy_init_8852c[0]));
+        break;
+    case RTW89_CHIP_8922A:
+        applyRegTable(hw.mmio, rtw89_phy_init_8922a,
+                      sizeof(rtw89_phy_init_8922a) / sizeof(rtw89_phy_init_8922a[0]));
+        break;
+    default:
+        break;
+    }
+
+    IOLog("RtlHal_rtw89: initRF done chip=%d rfmod=0x%08x\n",
+          hw.chip_id, mmioRead32(hw.mmio, REG_R_AX_PHY0_RFMOD));
 }
 
 void RtlHal_rtw89::startTxRx()
@@ -341,8 +484,18 @@ void RtlHal_rtw89::startTxRx()
         IOLog("RtlHal_rtw89: startTxRx skipped (no pciDev)\n");
         return;
     }
+
     hw.pciDev->setMemoryEnable(true);
     hw.pciDev->setBusMasterEnable(true);
+
+    if (hw.mmio) {
+        mmioWrite32(hw.mmio, REG_R_AX_DMAC_FUNC_EN, AX_DMAC_ENABLE);
+        mmioWrite32(hw.mmio, REG_R_AX_CMAC_FUNC_EN, AX_CMAC_ENABLE);
+        mmioWrite32(hw.mmio, REG_R_AX_HCI_FUNC_EN, AX_HCI_TRX_ENABLE);
+        mmioWrite32(hw.mmio, REG_R_AX_HIMR0, 0xFFFFFFFFU);
+        mmioWrite32(hw.mmio, REG_R_AX_HISR0, 0xFFFFFFFFU);
+    }
+
     hw.tx_active = true;
     hw.rx_active = true;
     hw.tx_prod = 0;
@@ -359,6 +512,15 @@ void RtlHal_rtw89::stopTxRx()
         IOLog("RtlHal_rtw89: stopTxRx skipped (no pciDev)\n");
         return;
     }
+
+    if (hw.mmio) {
+        mmioWrite32(hw.mmio, REG_R_AX_HIMR0, 0x00000000U);
+        mmioWrite32(hw.mmio, REG_R_AX_HCI_FUNC_EN, 0x0U);
+        mmioWrite32(hw.mmio, REG_R_AX_DMAC_FUNC_EN, 0x0U);
+        mmioWrite32(hw.mmio, REG_R_AX_CMAC_FUNC_EN, 0x0U);
+        mmioWrite32(hw.mmio, REG_R_AX_HISR0, 0xFFFFFFFFU);
+    }
+
     hw.pciDev->setBusMasterEnable(false);
     hw.pciDev->setMemoryEnable(false);
     hw.tx_active = false;

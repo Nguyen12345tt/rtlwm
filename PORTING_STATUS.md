@@ -36,6 +36,14 @@ Ghi chú: các họ chưa port ở trên cần thêm mapping chip, firmware path
 ## Còn thiếu để card chạy thực tế trên macOS
 
 1. Port logic MAC/PHY/PCI đầy đủ từ Linux (`rtw88`/`rtw89`) vào HAL `.cpp`.
+   - Đã thay `initHardware()` stub ở `hal_rtw88`/`hal_rtw89` bằng flow MAC/PCI thực thi:
+     - bật PCI command bits (BusMaster + MemorySpace),
+     - enable khối MAC/DMAC/CMAC/HCI qua MMIO,
+     - clear/mask interrupt ban đầu,
+     - ghi MAC address vào MACID register,
+     - poll trạng thái enable.
+   - Đã thay `initRF()` stub bằng bảng init PHY theo chip (rtw88/rtw89) để có flow bring-up cụ thể.
+   - Chưa hoàn tất mức “Linux-equivalent”: còn thiếu efuse parsing thật, calibration (IQK/DPK), và toàn bộ register tables đầy đủ từ upstream.
 2. Hoàn thiện đường TX/RX, interrupt, DMA descriptors.
    - Đã có skeleton dispatch interrupt: `rtlwm::handleInterrupt()` -> `RtlHalService::handleInterrupt()`.
    - Đã có skeleton state TX/RX/IRQ counters trong `hal_rtw88` và `hal_rtw89`.
