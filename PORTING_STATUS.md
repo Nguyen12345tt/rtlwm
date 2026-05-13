@@ -40,7 +40,7 @@ Ghi chú: các họ chưa port ở trên cần thêm mapping chip, firmware path
 
 ## Việc cần làm tiếp theo (TODO)
 
-- [ ] Hoàn thiện phần MAC/PHY/PCI còn thiếu cho từng chip `rtw88`/`rtw89` để đủ mức chạy thực tế, không chỉ bring-up.
+- [ ] **Ưu tiên 1 (làm trước):** Hoàn thiện phần MAC/PHY/PCI còn thiếu cho từng chip `rtw88`/`rtw89` để đủ mức chạy thực tế, không chỉ bring-up.
 - [ ] Hoàn thiện TX/RX data path dưới tải:
   - [ ] xử lý đầy đủ interrupt path theo queue,
   - [ ] hoàn thiện luồng RX parse/recycle/error path,
