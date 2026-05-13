@@ -38,25 +38,18 @@ Repository đã mirror cây thư mục theo cấu trúc itlwm:
 
 Ghi chú: các họ chưa port ở trên cần thêm mapping chip, firmware path, và HAL mới trước khi có thể dùng trên macOS.
 
-## Còn thiếu để card chạy thực tế trên macOS
+## Việc cần làm tiếp theo (TODO)
 
-1. Port logic MAC/PHY/PCI đầy đủ từ Linux (`rtw88`/`rtw89`) vào HAL `.cpp`.
-   - Đã thay `initHardware()` stub ở `hal_rtw88`/`hal_rtw89` bằng flow MAC/PCI thực thi:
-     - bật PCI command bits (BusMaster + MemorySpace),
-     - enable khối MAC/DMAC/CMAC/HCI qua MMIO,
-     - clear/mask interrupt ban đầu,
-     - ghi MAC address vào MACID register,
-     - poll trạng thái enable.
-   - Đã thay `initRF()` stub bằng bảng init PHY theo chip (rtw88/rtw89) để có flow bring-up cụ thể.
-   - Đã nâng mức “Linux-equivalent” cho bring-up: efuse parsing theo logical map (header/word-enable), calibration IQK/DPK có retry + poll trạng thái, và register tables theo chip đã được mở rộng theo upstream mapping hiện có.
-2. Hoàn thiện đường TX/RX, interrupt, DMA descriptors.
-   - Đã có skeleton dispatch interrupt: `rtlwm::handleInterrupt()` -> `RtlHalService::handleInterrupt()`.
-   - Đã có đọc + acknowledge thanh ghi IRQ thật (`HISR`/`HIMR`) trong `hal_rtw88` và `hal_rtw89`.
-   - Đã có DMA descriptor ring cơ bản (TX/RX) với cấp phát/khởi tạo/giải phóng vòng đời trong `startTxRx()`/`stopTxRx()`.
-   - Đã map bus address thật cho từng descriptor (ring descriptor + buffer descriptor) và đã nối vào TX/RX descriptor engine qua các thanh ghi DESA/NUM/IDX cùng vòng re-arm RX theo IRQ.
-   - Đường enqueue TX từ `outputPacket()` xuống HAL TX ring đã hoàn thiện: `Airportrtlwm::outputPacket` forward mbuf tới `halService->enqueueTxPacket`; RTW88/RTW89 HAL thực hiện descriptor-ring enqueue và cập nhật doorbell index.
-3. Hoàn thiện glue với `ieee80211` stack và state machine kết nối.
-4. Build và ký kext trên macOS + KDK phù hợp.
+- [ ] Hoàn thiện phần MAC/PHY/PCI còn thiếu cho từng chip `rtw88`/`rtw89` để đủ mức chạy thực tế, không chỉ bring-up.
+- [ ] Hoàn thiện TX/RX data path dưới tải:
+  - [ ] xử lý đầy đủ interrupt path theo queue,
+  - [ ] hoàn thiện luồng RX parse/recycle/error path,
+  - [ ] bổ sung các case TX thực tế (retry/fail/reclaim đồng bộ).
+- [ ] Hoàn thiện glue với `ieee80211` stack và state machine kết nối (scan -> auth -> assoc -> data -> disconnect/reconnect).
+- [ ] Kiểm thử ổn định thực tế trên phần cứng:
+  - [ ] reconnect nhiều lần, sleep/wake, roaming cơ bản,
+  - [ ] stress test ping/throughput dài hạn.
+- [ ] Hoàn thiện build + ký kext trên macOS với KDK phù hợp, và chốt checklist release/debug.
 
 ## Mapping Linux -> macOS
 
