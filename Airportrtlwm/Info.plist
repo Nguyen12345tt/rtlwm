@@ -71,7 +71,7 @@
 			<key>IOClass</key>
 			<string>Airportrtlwm</string>
 			<key>IOPCIPrimaryMatch</key>
-			<string>0xC82110EC</string>
+			<string>0xC82110EC 0xC82F10EC</string>
 			<key>IOProbeScore</key>
 			<integer>2000</integer>
 			<key>IOProviderClass</key>

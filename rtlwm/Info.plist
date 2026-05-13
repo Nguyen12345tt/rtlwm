@@ -27,7 +27,7 @@
 			<key>IOClass</key>
 			<string>rtlwm</string>
 			<key>IOPCIPrimaryMatch</key>
-			<string>0xB82210EC 0xC82210EC 0xD72310EC 0xC82110EC 0x885210EC 0xB85210EC 0x885110EC 0xA85210EC 0x892210EC</string>
+			<string>0xB82210EC 0xC82210EC 0xD72310EC 0xC82110EC 0xC82F10EC 0x885210EC 0xB85210EC 0x885110EC 0xA85210EC 0x892210EC</string>
 			<key>IOProbeScore</key>
 			<integer>2000</integer>
 			<key>IOProviderClass</key>

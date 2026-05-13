@@ -721,6 +721,8 @@ bool RtlHal_rtw89::setMacAddress(const uint8_t *addr)
     if (!addr)
         return false;
     memcpy(hw.mac_addr, addr, sizeof(hw.mac_addr));
+    if (hw.mmio)
+        return writeMacAddressRegs(hw.mmio, hw.mac_addr);
     return true;
 }
 
