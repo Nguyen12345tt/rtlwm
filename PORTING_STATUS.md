@@ -20,6 +20,11 @@ Repository đã mirror cây thư mục theo cấu trúc itlwm:
 3. Pipeline firmware nhúng vào kext:
    - `scripts/fw_gen.sh`
    - `include/FwData.h`
+4. Hoàn thiện IOCTL handlers trong `AirportSTAIOCTL.cpp` và `AirportVirtualIOCTL.cpp`:
+   - Bổ sung đầy đủ các GET handler: `STATUS_DEV_NAME`, `HT_CAPABILITY`, `VHT_CAPABILITY`, `GUARD_INTERVAL`, `BLOCK_ACK`, `PHY_SUB_MODE`, v.v.
+   - Bổ sung đầy đủ các SET handler: `REASSOCIATE`, `CHANNEL`, `TX_ANTENNA`, `RX_ANTENNA`, `INT_MIT`, `GUARD_INTERVAL`, `BLOCK_ACK`, `PHY_SUB_MODE`, v.v.
+   - Sửa dữ liệu trả về RSSI/noise (điền đầy đủ các trường `_ext` và `aggregate_*_ext`).
+   - Virtual interface: delegate toàn bộ GET/SET tương thích sang STA handler; giữ `EOPNOTSUPP` cho `VIRTUAL_IF_CREATE/DELETE/ROLE/PARENT`.
 
 ## Tổng hợp theo danh sách Linux Realtek đã cung cấp
 
@@ -49,10 +54,9 @@ Ghi chú: các họ chưa port ở trên cần thêm mapping chip, firmware path
    - Đã có đọc + acknowledge thanh ghi IRQ thật (`HISR`/`HIMR`) trong `hal_rtw88` và `hal_rtw89`.
    - Đã có DMA descriptor ring cơ bản (TX/RX) với cấp phát/khởi tạo/giải phóng vòng đời trong `startTxRx()`/`stopTxRx()`.
    - Đã map bus address thật cho từng descriptor (ring descriptor + buffer descriptor) và đã nối vào TX/RX descriptor engine qua các thanh ghi DESA/NUM/IDX cùng vòng re-arm RX theo IRQ.
-   - Còn thiếu đường enqueue TX hoàn chỉnh từ `outputPacket()` xuống HAL TX ring.
-3. Hoàn thiện IOCTL handlers trong `AirportSTAIOCTL.cpp` và `AirportVirtualIOCTL.cpp`.
-4. Hoàn thiện glue với `ieee80211` stack và state machine kết nối.
-5. Build và ký kext trên macOS + KDK phù hợp.
+   - Đường enqueue TX từ `outputPacket()` xuống HAL TX ring đã hoàn thiện: `Airportrtlwm::outputPacket` forward mbuf tới `halService->enqueueTxPacket`; RTW88/RTW89 HAL thực hiện descriptor-ring enqueue và cập nhật doorbell index.
+3. Hoàn thiện glue với `ieee80211` stack và state machine kết nối.
+4. Build và ký kext trên macOS + KDK phù hợp.
 
 ## Mapping Linux -> macOS
 
