@@ -102,6 +102,14 @@ enum : uint32_t {
     RTW88_RX_BUF_SIZE = 2048,
 };
 
+enum : uint8_t {
+    RTLWM_CONN_STATE_INIT  = 0,
+    RTLWM_CONN_STATE_SCAN  = 1,
+    RTLWM_CONN_STATE_AUTH  = 2,
+    RTLWM_CONN_STATE_ASSOC = 3,
+    RTLWM_CONN_STATE_DATA  = 4,
+};
+
 static inline uint8_t mmioRead8(volatile uint8_t *base, uint32_t reg)
 {
     return OSReadLittleInt8((const volatile void *)(base + reg), 0);
@@ -598,7 +606,12 @@ bool RtlHal_rtw88::attach(IOPCIDevice *device)
 
     /* Initialise the 802.11 stack */
     memset(&ic, 0, sizeof(ic));
-    /* 802.11 attach sequence is pending deeper net80211 integration. */
+    ic.ic_softc = this;
+    icNewstateHook = ic.ic_newstate;
+    ic.ic_newstate = &RtlHal_rtw88::ieee80211NewState;
+    connState = RTLWM_CONN_STATE_INIT;
+    reconnectBudget = 0;
+    reconnectDelayTicks = 0;
 
     IOLog("RtlHal_rtw88: attached chip_id=%d mmio_bar=%u\n", hw.chip_id,
           (mmioBar == kIOPCIConfigBaseAddress2) ? 2U : 0U);
@@ -636,6 +649,7 @@ IOReturn RtlHal_rtw88::enable(IONetworkInterface *interface)
     if (!hw.tx_active || !hw.rx_active)
         return kIOReturnIOError;
     hw.running = true;
+    startConnectionFlow();
     return kIOReturnSuccess;
 }
 
@@ -644,6 +658,9 @@ IOReturn RtlHal_rtw88::disable(IONetworkInterface *interface)
     if (!hw.running)
         return kIOReturnSuccess;
     stopTxRx();
+    connState = RTLWM_CONN_STATE_INIT;
+    reconnectDelayTicks = 0;
+    (void)request80211State(RTLWM_CONN_STATE_INIT, 0);
     hw.running = false;
     return kIOReturnSuccess;
 }
@@ -699,6 +716,7 @@ void RtlHal_rtw88::handleInterrupt()
     hw.irq_count++;
     if (isr & RTW88_INT_TX_DONE) {
         hw.tx_cons = getHwRingIdxRtw88(hw.mmio, REG_TXBD_IDX_VOQ);
+        advanceConnectionFlowOnActivity();
     }
     if (isr & RTW88_INT_RX_DONE) {
         uint16_t hwRxIdx = getHwRingIdxRtw88(hw.mmio, REG_RXBD_IDX_MPDUQ);
@@ -711,9 +729,17 @@ void RtlHal_rtw88::handleInterrupt()
             hw.rx_prod = hw.rx_cons;
             setHostRingIdxRtw88(hw.mmio, REG_RXBD_IDX_MPDUQ, hw.rx_prod);
         }
+        advanceConnectionFlowOnActivity();
     }
     if (isr & (RTW88_INT_RX_ERR | RTW88_INT_TX_ERR)) {
         IOLog("RtlHal_rtw88: irq error isr=0x%08x\n", isr);
+        scheduleReconnect();
+    }
+
+    if (reconnectDelayTicks > 0) {
+        reconnectDelayTicks--;
+        if (reconnectDelayTicks == 0 && hw.running)
+            startConnectionFlow();
     }
 
     if ((hw.irq_count & 0x3FFU) == 1U) {
@@ -725,6 +751,101 @@ void RtlHal_rtw88::handleInterrupt()
 struct ieee80211com *RtlHal_rtw88::get80211Controller()
 {
     return &ic;
+}
+
+int RtlHal_rtw88::ieee80211NewState(struct ieee80211com *ic, enum ieee80211_state nstate, int arg)
+{
+    if (!ic)
+        return 0;
+
+    RtlHal_rtw88 *self = reinterpret_cast<RtlHal_rtw88 *>(ic->ic_softc);
+    if (!self)
+        return 0;
+
+    self->handle80211StateTransition((int)nstate, arg);
+    if (self->icNewstateHook && self->icNewstateHook != &RtlHal_rtw88::ieee80211NewState)
+        return self->icNewstateHook(ic, nstate, arg);
+    return 0;
+}
+
+void RtlHal_rtw88::handle80211StateTransition(int nstate, int arg)
+{
+    (void)arg;
+    switch (nstate) {
+    case RTLWM_CONN_STATE_SCAN:
+        connState = RTLWM_CONN_STATE_SCAN;
+        break;
+    case RTLWM_CONN_STATE_AUTH:
+        connState = RTLWM_CONN_STATE_AUTH;
+        break;
+    case RTLWM_CONN_STATE_ASSOC:
+        connState = RTLWM_CONN_STATE_ASSOC;
+        break;
+    case RTLWM_CONN_STATE_DATA:
+        connState = RTLWM_CONN_STATE_DATA;
+        reconnectBudget = 0;
+        reconnectDelayTicks = 0;
+        break;
+    default:
+        connState = RTLWM_CONN_STATE_INIT;
+        break;
+    }
+}
+
+void RtlHal_rtw88::startConnectionFlow()
+{
+    if (!hw.running)
+        return;
+
+    if (reconnectBudget == 0)
+        reconnectBudget = 3;
+
+    connState = RTLWM_CONN_STATE_INIT;
+    reconnectDelayTicks = 0;
+    (void)request80211State(RTLWM_CONN_STATE_SCAN, 0);
+}
+
+void RtlHal_rtw88::scheduleReconnect()
+{
+    if (!hw.running)
+        return;
+
+    connState = RTLWM_CONN_STATE_INIT;
+    (void)request80211State(RTLWM_CONN_STATE_INIT, 0);
+
+    if (reconnectBudget > 0) {
+        reconnectBudget--;
+        reconnectDelayTicks = 20; /* ~2s with watchdog/irq cadence */
+    } else {
+        reconnectDelayTicks = 0;
+    }
+}
+
+void RtlHal_rtw88::advanceConnectionFlowOnActivity()
+{
+    if (!hw.running)
+        return;
+
+    switch (connState) {
+    case RTLWM_CONN_STATE_SCAN:
+        (void)request80211State(RTLWM_CONN_STATE_AUTH, 0);
+        break;
+    case RTLWM_CONN_STATE_AUTH:
+        (void)request80211State(RTLWM_CONN_STATE_ASSOC, 0);
+        break;
+    case RTLWM_CONN_STATE_ASSOC:
+        (void)request80211State(RTLWM_CONN_STATE_DATA, 0);
+        break;
+    default:
+        break;
+    }
+}
+
+bool RtlHal_rtw88::request80211State(int nstate, int arg)
+{
+    if (!ic.ic_newstate)
+        return false;
+    return ic.ic_newstate(&ic, (enum ieee80211_state)nstate, arg) == 0;
 }
 
 void RtlHal_rtw88::free()

@@ -118,6 +118,15 @@ public:
     IOReturn setMulticastList(IOEthernetAddress *addr, int cnt) override;
 
 private:
+    using ieee80211_newstate_cb = int (*)(struct ieee80211com *, enum ieee80211_state, int);
+
+    static int ieee80211NewState(struct ieee80211com *ic, enum ieee80211_state nstate, int arg);
+    void handle80211StateTransition(int nstate, int arg);
+    void startConnectionFlow();
+    void scheduleReconnect();
+    void advanceConnectionFlowOnActivity();
+    bool request80211State(int nstate, int arg);
+
     bool initHardware();
     bool loadFirmware();
     void initRF();
@@ -126,6 +135,10 @@ private:
 
     struct rtw89_dev    hw;
     struct ieee80211com ic;
+    ieee80211_newstate_cb icNewstateHook;
+    uint8_t connState;
+    uint8_t reconnectBudget;
+    uint16_t reconnectDelayTicks;
 };
 
 #endif /* RtlHal_rtw89_hpp */
