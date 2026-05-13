@@ -217,6 +217,8 @@ static SInt32 rtlwmGetRssi(apple80211_rssi_data *out)
     out->rssi_unit = APPLE80211_UNIT_DBM;
     out->rssi[0] = -95;
     out->aggregate_rssi = out->rssi[0];
+    out->rssi_ext[0] = out->rssi[0];
+    out->aggregate_rssi_ext = out->rssi[0];
     return kIOReturnSuccess;
 }
 
@@ -233,6 +235,8 @@ static SInt32 rtlwmGetNoise(Airportrtlwm *controller, apple80211_noise_data *out
     out->noise_unit = APPLE80211_UNIT_DBM;
     out->noise[0] = noise;
     out->aggregate_noise = noise;
+    out->noise_ext[0] = noise;
+    out->aggregate_noise_ext = noise;
     return kIOReturnSuccess;
 }
 
@@ -616,6 +620,96 @@ static SInt32 rtlwmGetBtcOptions(apple80211_btc_options_data *out)
     return kIOReturnSuccess;
 }
 
+static SInt32 rtlwmGetStatusDevName(apple80211_status_dev_data *out)
+{
+    if (!out)
+        return EINVAL;
+
+    bzero(out, sizeof(*out));
+    out->version = APPLE80211_VERSION;
+    strlcpy(reinterpret_cast<char *>(out->dev_name), "Realtek PCIe WiFi",
+            sizeof(out->dev_name));
+    return kIOReturnSuccess;
+}
+
+static SInt32 rtlwmGetHtCapability(Airportrtlwm *controller, apple80211_ht_capability *out)
+{
+    if (!out)
+        return EINVAL;
+
+    bzero(out, sizeof(*out));
+    out->version = APPLE80211_VERSION;
+    out->hc_id  = 45;   /* IEEE 802.11 HT Capabilities element ID */
+    out->hc_len = 26;
+    /*
+     * HT capability info:
+     *   bit 1  – supported channel width (0=20MHz only, 1=20/40MHz)
+     *   bit 2-3 – SM power save disabled (11)
+     *   bit 5  – short GI for 20MHz
+     *   bit 6  – short GI for 40MHz
+     */
+    out->hc_cap = 0x006e;
+
+    const int nss = controller && controller->getDriverInfo()
+                    ? controller->getDriverInfo()->getTxNSS() : 1;
+    out->hc_mcsset[0] = 0xff;               /* MCS 0–7  (stream 1) */
+    if (nss >= 2)
+        out->hc_mcsset[1] = 0xff;           /* MCS 8–15 (stream 2) */
+
+    return kIOReturnSuccess;
+}
+
+static SInt32 rtlwmGetVhtCapability(apple80211_vht_capability *out)
+{
+    if (!out)
+        return EINVAL;
+
+    bzero(out, sizeof(*out));
+    out->version = APPLE80211_VERSION;
+    /*
+     * cap == 0: basic VHT without special features.
+     * unk1 encodes the Supported VHT-MCS and NSS Set (RX/TX MCS maps).
+     * 0xfffa = NSS1 supports MCS 0–9 (bits 0-1 = 10), NSS2–8 not supported
+     * (bits 2-15 = 11).  Lower 16 bits for RX map, upper 16 for TX map.
+     */
+    out->unk1 = 0xfffafffa;
+    out->unk2 = 0xfffa;
+    out->unk3 = 0xfffa;
+    return kIOReturnSuccess;
+}
+
+static SInt32 rtlwmGetGuardInterval(apple80211_guard_interval_data *out)
+{
+    if (!rtlwmInitVersioned(out))
+        return EINVAL;
+
+    out->interval = APPLE80211_GI_LONG;
+    return kIOReturnSuccess;
+}
+
+static SInt32 rtlwmGetBlockAck(apple80211_block_ack_data *out)
+{
+    if (!rtlwmInitVersioned(out))
+        return EINVAL;
+
+    out->ba_enabled           = 1;
+    out->immediate_ba_enabled = 1;
+    out->cbba_enabled         = 1;
+    out->implicit_ba_enabled  = 0;
+    return kIOReturnSuccess;
+}
+
+static SInt32 rtlwmGetPhySubMode(apple80211_physubmode_data *out)
+{
+    if (!rtlwmInitVersioned(out))
+        return EINVAL;
+
+    out->phy_mode    = APPLE80211_MODE_11N;
+    out->phy_submode = APPLE80211_SUBMODE_11N_AUTO;
+    out->flags       = APPLE80211_C_FLAG_2GHZ | APPLE80211_C_FLAG_20MHZ;
+    return kIOReturnSuccess;
+}
+
 static SInt32 rtlwmHandleDisassociate(Airportrtlwm *controller)
 {
     if (RtlDriverController *driverController = controller ? controller->getDriverController() : nullptr)
@@ -761,6 +855,18 @@ SInt32 rtlwmHandleStaIoctl(Airportrtlwm *controller, UInt requestType, int reque
             return rtlwmGetBtcOptions(static_cast<apple80211_btc_options_data *>(data));
         case APPLE80211_IOC_BTCOEX_MODE:
             return rtlwmGetBtcMode(static_cast<apple80211_btc_mode_data *>(data));
+        case APPLE80211_IOC_STATUS_DEV_NAME:
+            return rtlwmGetStatusDevName(static_cast<apple80211_status_dev_data *>(data));
+        case APPLE80211_IOC_HT_CAPABILITY:
+            return rtlwmGetHtCapability(controller, static_cast<apple80211_ht_capability *>(data));
+        case APPLE80211_IOC_VHT_CAPABILITY:
+            return rtlwmGetVhtCapability(static_cast<apple80211_vht_capability *>(data));
+        case APPLE80211_IOC_GUARD_INTERVAL:
+            return rtlwmGetGuardInterval(static_cast<apple80211_guard_interval_data *>(data));
+        case APPLE80211_IOC_BLOCK_ACK:
+            return rtlwmGetBlockAck(static_cast<apple80211_block_ack_data *>(data));
+        case APPLE80211_IOC_PHY_SUB_MODE:
+            return rtlwmGetPhySubMode(static_cast<apple80211_physubmode_data *>(data));
         default:
             return EOPNOTSUPP;
         }
@@ -789,10 +895,18 @@ SInt32 rtlwmHandleStaIoctl(Airportrtlwm *controller, UInt requestType, int reque
     case APPLE80211_IOC_BTCOEX_OPTIONS:
     case APPLE80211_IOC_BTCOEX_MODE:
     case APPLE80211_IOC_SCANCACHE_CLEAR:
+    case APPLE80211_IOC_CHANNEL:
+    case APPLE80211_IOC_TX_ANTENNA:
+    case APPLE80211_IOC_RX_ANTENNA:
+    case APPLE80211_IOC_INT_MIT:
+    case APPLE80211_IOC_GUARD_INTERVAL:
+    case APPLE80211_IOC_BLOCK_ACK:
+    case APPLE80211_IOC_PHY_SUB_MODE:
         return kIOReturnSuccess;
     case APPLE80211_IOC_POWERSAVE:
         return rtlwmSetPowersave(static_cast<const apple80211_powersave_data *>(data));
     case APPLE80211_IOC_ASSOCIATE:
+    case APPLE80211_IOC_REASSOCIATE:
         return rtlwmHandleAssociate(static_cast<const apple80211_assoc_data *>(data));
     case APPLE80211_IOC_DISASSOCIATE:
     case APPLE80211_IOC_DEAUTH:
