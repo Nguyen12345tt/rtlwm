@@ -335,6 +335,45 @@ static void setHostRingIdxRtw89(volatile uint8_t *base, uint32_t reg, uint16_t h
     mmioWrite32(base, reg, v);
 }
 
+static inline uint16_t nextRingIdx(uint16_t idx, uint16_t cnt)
+{
+    return (uint16_t)((idx + 1U) % cnt);
+}
+
+static void reclaimTxQueueRtw89(struct rtw89_dev *hw, uint16_t hwTxIdx)
+{
+    if (!hw || !hw->tx_desc_cnt || !hw->tx_desc)
+        return;
+
+    while (hw->tx_cons != hwTxIdx) {
+        uint16_t idx = hw->tx_cons;
+        hw->tx_desc[idx].ctl0 &= ~DESC_OWN;
+        hw->tx_cons = nextRingIdx(hw->tx_cons, hw->tx_desc_cnt);
+    }
+}
+
+static void recycleRxQueueRtw89(struct rtw89_dev *hw, volatile uint8_t *mmio,
+                                uint16_t hwRxIdx, bool forceAll)
+{
+    if (!hw || !mmio || !hw->rx_desc_cnt || !hw->rx_desc)
+        return;
+
+    if (forceAll) {
+        for (uint16_t i = 0; i < hw->rx_desc_cnt; i++)
+            hw->rx_desc[i].ctl0 = DESC_OWN | (uint32_t)(RTW89_RX_BUF_SIZE & DESC_LEN_MASK);
+        hw->rx_cons = hwRxIdx;
+    } else {
+        while (hw->rx_cons != hwRxIdx) {
+            uint16_t idx = hw->rx_cons;
+            hw->rx_desc[idx].ctl0 = DESC_OWN | (uint32_t)(RTW89_RX_BUF_SIZE & DESC_LEN_MASK);
+            hw->rx_cons = nextRingIdx(hw->rx_cons, hw->rx_desc_cnt);
+        }
+    }
+
+    hw->rx_prod = hw->rx_cons;
+    setHostRingIdxRtw89(mmio, REG_R_AX_RXQ_RXBD_IDX, hw->rx_prod);
+}
+
 static bool isValidMacAddr(const uint8_t mac[6])
 {
     if (!mac)
@@ -618,11 +657,19 @@ bool RtlHal_rtw89::enqueueTxPacket(mbuf_t packet)
     hw.tx_cons = getHwRingIdxRtw89(hw.mmio, REG_R_AX_ACH0_TXBD_IDX);
     uint16_t prod = hw.tx_prod;
     uint16_t next = (uint16_t)((prod + 1) % hw.tx_desc_cnt);
-    if (next == hw.tx_cons)
-        return false;
+    if (next == hw.tx_cons) {
+        reclaimTxQueueRtw89(&hw, hw.tx_cons);
+        hw.tx_cons = getHwRingIdxRtw89(hw.mmio, REG_R_AX_ACH0_TXBD_IDX);
+        next = (uint16_t)((prod + 1) % hw.tx_desc_cnt);
+        if (next == hw.tx_cons)
+            return false;
+    }
 
-    if (hw.tx_desc[prod].ctl0 & DESC_OWN)
-        return false;
+    if (hw.tx_desc[prod].ctl0 & DESC_OWN) {
+        reclaimTxQueueRtw89(&hw, hw.tx_cons);
+        if (hw.tx_desc[prod].ctl0 & DESC_OWN)
+            return false;
+    }
 
     uint32_t len = (uint32_t)mbuf_pkthdr_len(packet);
     if (len == 0)
@@ -658,23 +705,23 @@ void RtlHal_rtw89::handleInterrupt()
     mmioWrite32(hw.mmio, REG_R_AX_HISR0, isr);
 
     hw.irq_count++;
-    if (isr & RTW89_INT_TX_DONE) {
-        hw.tx_cons = getHwRingIdxRtw89(hw.mmio, REG_R_AX_ACH0_TXBD_IDX);
-        advanceConnectionFlowOnActivity();
+
+    const bool txqIrq = (isr & (RTW89_INT_TX_DONE | RTW89_INT_TX_ERR)) != 0;
+    if (txqIrq) {
+        uint16_t hwTxIdx = getHwRingIdxRtw89(hw.mmio, REG_R_AX_ACH0_TXBD_IDX);
+        reclaimTxQueueRtw89(&hw, hwTxIdx);
+        if (isr & RTW89_INT_TX_DONE)
+            advanceConnectionFlowOnActivity();
     }
-    if (isr & RTW89_INT_RX_DONE) {
+
+    const bool rxqIrq = (isr & (RTW89_INT_RX_DONE | RTW89_INT_RX_ERR)) != 0;
+    if (rxqIrq) {
         uint16_t hwRxIdx = getHwRingIdxRtw89(hw.mmio, REG_R_AX_RXQ_RXBD_IDX);
-        if (hw.rx_desc_cnt) {
-            while (hw.rx_cons != hwRxIdx) {
-                uint16_t idx = hw.rx_cons;
-                hw.rx_desc[idx].ctl0 = DESC_OWN | (uint32_t)(RTW89_RX_BUF_SIZE & DESC_LEN_MASK);
-                hw.rx_cons = (uint16_t)((hw.rx_cons + 1) % hw.rx_desc_cnt);
-            }
-            hw.rx_prod = hw.rx_cons;
-            setHostRingIdxRtw89(hw.mmio, REG_R_AX_RXQ_RXBD_IDX, hw.rx_prod);
-        }
-        advanceConnectionFlowOnActivity();
+        recycleRxQueueRtw89(&hw, hw.mmio, hwRxIdx, (isr & RTW89_INT_RX_ERR) != 0);
+        if (isr & RTW89_INT_RX_DONE)
+            advanceConnectionFlowOnActivity();
     }
+
     if (isr & (RTW89_INT_RX_ERR | RTW89_INT_TX_ERR)) {
         IOLog("RtlHal_rtw89: irq error isr=0x%08x\n", isr);
         scheduleReconnect();
