@@ -54,6 +54,7 @@ bool rtlwm::init(OSDictionary *dict)
     halService  = nullptr;
     ifEnabled   = false;
     ifRunning   = false;
+    pmRestoreOnWake = false;
     powerState  = 0;
     return true;
 }
@@ -200,6 +201,15 @@ IOWorkLoop *rtlwm::getWorkLoop() const
 
 IOReturn rtlwm::enable(IONetworkInterface *netif)
 {
+    ifEnabled = true;
+    if (powerState == 0)
+        return kIOReturnSuccess;
+    pmRestoreOnWake = false;
+    return startIfNeeded(netif);
+}
+
+IOReturn rtlwm::startIfNeeded(IONetworkInterface *netif)
+{
     if (ifRunning)
         return kIOReturnSuccess;
     if (!netif)
@@ -223,9 +233,15 @@ IOReturn rtlwm::enable(IONetworkInterface *netif)
 
 IOReturn rtlwm::disable(IONetworkInterface *netif)
 {
+    ifEnabled = false;
+    pmRestoreOnWake = false;
+    return stopIfRunning(netif);
+}
+
+IOReturn rtlwm::stopIfRunning(IONetworkInterface *netif)
+{
     if (!ifRunning)
         return kIOReturnSuccess;
-
     if (outputQueue) {
         outputQueue->stop();
         outputQueue->flush();
@@ -347,12 +363,14 @@ IOReturn rtlwm::setPowerState(unsigned long ordinal, IOService *)
         return IOPMAckImplied;
 
     if (ordinal == 0) {
-        (void)disable(netInterface);
+        pmRestoreOnWake = ifRunning;
+        (void)stopIfRunning(netInterface);
         return IOPMAckImplied;
     }
 
-    if (!ifRunning)
-        (void)enable(netInterface);
+    if ((ifEnabled || pmRestoreOnWake) && !ifRunning)
+        (void)startIfNeeded(netInterface);
+    pmRestoreOnWake = false;
     return IOPMAckImplied;
 }
 

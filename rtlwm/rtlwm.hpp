@@ -66,6 +66,9 @@ public:
                                    IOService *whatDevice)            override;
 
 private:
+    IOReturn startIfNeeded(IONetworkInterface *netif);
+    IOReturn stopIfRunning(IONetworkInterface *netif);
+
     /* HAL selection and probe */
     RtlHalService *probeHardware(IOPCIDevice *pciDev);
 
@@ -92,6 +95,7 @@ private:
 
     bool   ifEnabled        {false};
     bool   ifRunning        {false};
+    bool   pmRestoreOnWake  {false};
     UInt32 powerState       {0};
 };
 
