@@ -69,5 +69,7 @@ Xem file: `linux_realtek_map.json`.
   - https://github.com/torvalds/linux/tree/master/drivers/net/wireless/realtek/rtl8xxxu
 - rtlwifi *(chưa port)* — RTL8188EE, RTL8192CE/SE/DE/EE, RTL8723AE/BE, RTL8821AE (PCI):
   - https://github.com/torvalds/linux/tree/master/drivers/net/wireless/realtek/rtlwifi
+  - rtl8188ee:
+    - https://github.com/torvalds/linux/tree/master/drivers/net/wireless/realtek/rtlwifi/rtl8188ee
 - Linux firmware (nguồn `.bin`):
   - https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
