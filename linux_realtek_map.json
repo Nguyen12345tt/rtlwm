@@ -24,6 +24,51 @@
         { "name": "RTL8852CE", "pci_id": "10ec:a852", "firmware": "rtw8852c_fw.bin" },
         { "name": "RTL8922AE", "pci_id": "10ec:8922", "firmware": "rtw8922a_fw.bin" }
       ]
+    },
+    {
+      "linux_driver": "rtl818x",
+      "linux_tree": "https://github.com/torvalds/linux/tree/master/drivers/net/wireless/realtek/rtl818x",
+      "macos_layer": "rtlwm/hal_rtl818x",
+      "status": "not_ported",
+      "chips": [
+        { "name": "RTL8180", "pci_id": "10ec:8180", "bus": "pci", "firmware": null },
+        { "name": "RTL8185", "pci_id": "10ec:8185", "bus": "pci", "firmware": null },
+        { "name": "RTL8187",  "usb_id": "0bda:8187", "bus": "usb", "firmware": null },
+        { "name": "RTL8187B", "usb_id": "0bda:8189", "bus": "usb", "firmware": null }
+      ]
+    },
+    {
+      "linux_driver": "rtl8xxxu",
+      "linux_tree": "https://github.com/torvalds/linux/tree/master/drivers/net/wireless/realtek/rtl8xxxu",
+      "macos_layer": "rtlwm/hal_rtl8xxxu",
+      "status": "not_ported",
+      "chips": [
+        { "name": "RTL8188CU",  "usb_id": "0bda:8176", "bus": "usb", "firmware": "rtl8188cufw.bin" },
+        { "name": "RTL8188EU",  "usb_id": "0bda:8179", "bus": "usb", "firmware": "rtl8188eufw.bin" },
+        { "name": "RTL8188FU",  "usb_id": "0bda:f179", "bus": "usb", "firmware": "rtl8188fufw.bin" },
+        { "name": "RTL8192CU",  "usb_id": "0bda:8178", "bus": "usb", "firmware": "rtl8192cufw.bin" },
+        { "name": "RTL8192EU",  "usb_id": "0bda:818b", "bus": "usb", "firmware": "rtl8192eu_nic.bin" },
+        { "name": "RTL8723AU",  "usb_id": "0bda:1724", "bus": "usb", "firmware": "rtl8723aufw_B_NoBT.bin" },
+        { "name": "RTL8723BU",  "usb_id": "0bda:b720", "bus": "usb", "firmware": "rtl8723bu_nic.bin" },
+        { "name": "RTL8710BU",  "usb_id": "0bda:b711", "bus": "usb", "firmware": "rtl8710bufw_SMIC.bin" }
+      ]
+    },
+    {
+      "linux_driver": "rtlwifi",
+      "linux_tree": "https://github.com/torvalds/linux/tree/master/drivers/net/wireless/realtek/rtlwifi",
+      "macos_layer": "rtlwm/hal_rtlwifi",
+      "status": "not_ported",
+      "chips": [
+        { "name": "RTL8188EE",  "pci_id": "10ec:8179", "bus": "pci", "firmware": "rtl8188efw.bin" },
+        { "name": "RTL8192CE",  "pci_id": "10ec:8191", "bus": "pci", "firmware": "rtl8192cfw.bin" },
+        { "name": "RTL8192SE",  "pci_id": "10ec:8171", "bus": "pci", "firmware": "rtl8192sefw.bin" },
+        { "name": "RTL8192DE",  "pci_id": "10ec:8193", "bus": "pci", "firmware": "rtl8192defw.bin" },
+        { "name": "RTL8192EE",  "pci_id": "10ec:818b", "bus": "pci", "firmware": "rtl8192eefw.bin" },
+        { "name": "RTL8723AE",  "pci_id": "10ec:8723", "bus": "pci", "firmware": "rtl8723fw.bin" },
+        { "name": "RTL8723BE",  "pci_id": "10ec:b723", "bus": "pci", "firmware": "rtl8723befw.bin" },
+        { "name": "RTL8821AE",  "pci_id": "10ec:8821", "bus": "pci", "firmware": "rtl8821aefw.bin" },
+        { "name": "RTL8812AE",  "pci_id": "10ec:8812", "bus": "pci", "firmware": "rtl8812aefw.bin" }
+      ]
     }
   ],
   "macos_match_points": {

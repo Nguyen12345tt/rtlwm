@@ -59,9 +59,15 @@ Xem file: `linux_realtek_map.json`.
 
 - Linux Realtek wireless tree:
   - https://github.com/torvalds/linux/tree/master/drivers/net/wireless/realtek
-- RTW88:
+- RTW88 *(đã port)*:
   - https://github.com/torvalds/linux/tree/master/drivers/net/wireless/realtek/rtw88
-- RTW89:
+- RTW89 *(đã port)*:
   - https://github.com/torvalds/linux/tree/master/drivers/net/wireless/realtek/rtw89
+- rtl818x *(chưa port)* — RTL8180 (PCI), RTL8187 (USB):
+  - https://github.com/torvalds/linux/tree/master/drivers/net/wireless/realtek/rtl818x
+- rtl8xxxu *(chưa port)* — RTL8188CU/EU/FU, RTL8192CU/EU, RTL8723AU/BU, RTL8710BU (USB):
+  - https://github.com/torvalds/linux/tree/master/drivers/net/wireless/realtek/rtl8xxxu
+- rtlwifi *(chưa port)* — RTL8188EE, RTL8192CE/SE/DE/EE, RTL8723AE/BE, RTL8821AE (PCI):
+  - https://github.com/torvalds/linux/tree/master/drivers/net/wireless/realtek/rtlwifi
 - Linux firmware (nguồn `.bin`):
   - https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
