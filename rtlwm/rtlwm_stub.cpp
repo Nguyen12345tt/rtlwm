@@ -10,12 +10,12 @@ public:
             return false;
         }
 
-        IOLog("rtlwm stub started\\n");
+        IOLog("rtlwm stub started\n");
         return true;
     }
 
     void stop(IOService *provider) override {
-        IOLog("rtlwm stub stopped\\n");
+        IOLog("rtlwm stub stopped\n");
         super::stop(provider);
     }
 };
