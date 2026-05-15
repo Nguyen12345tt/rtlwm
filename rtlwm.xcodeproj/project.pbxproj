@@ -8,6 +8,14 @@ objects = {
 
 /* Begin PBXBuildFile section */
 A1B2C3D4E5F6000100000001 /* rtlwm_stub.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000100000002 /* rtlwm_stub.cpp */; };
+B1C2D3E4F500010000000101 /* Airportrtlwm.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F500010000000202 /* Airportrtlwm.hpp */; };
+B1C2D3E4F500010000000102 /* Airportrtlwm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F500010000000203 /* Airportrtlwm.cpp */; };
+B1C2D3E4F500010000000103 /* AirportSTAIOCTL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F500010000000205 /* AirportSTAIOCTL.cpp */; };
+B1C2D3E4F500010000000104 /* AirportVirtualIOCTL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F500010000000206 /* AirportVirtualIOCTL.cpp */; };
+B1C2D3E4F500010000000105 /* AirportRtlwmInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F500010000000208 /* AirportRtlwmInterface.cpp */; };
+B1C2D3E4F500010000000106 /* AirportRtlwmEthernetInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F50001000000020A /* AirportRtlwmEthernetInterface.cpp */; };
+B1C2D3E4F500010000000107 /* AirportRtlwmSkywalkInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F50001000000020C /* AirportRtlwmSkywalkInterface.cpp */; };
+B1C2D3E4F500010000000108 /* IOPCIEDeviceWrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F50001000000020E /* IOPCIEDeviceWrapper.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -16,10 +24,31 @@ A1B2C3D4E5F6000100000002 /* rtlwm_stub.cpp */ = {isa = PBXFileReference; lastKno
 A1B2C3D4E5F6000100000004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 A1B2C3D4E5F6000100000006 /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; path = include; sourceTree = "<group>"; };
 A1B2C3D4E5F6000100000007 /* rtl80211 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = rtl80211; sourceTree = "<group>"; };
+B1C2D3E4F500010000000201 /* Airportrtlwm.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Airportrtlwm.kext; sourceTree = BUILT_PRODUCTS_DIR; };
+B1C2D3E4F500010000000202 /* Airportrtlwm.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Airportrtlwm.hpp; sourceTree = "<group>"; };
+B1C2D3E4F500010000000203 /* Airportrtlwm.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Airportrtlwm.cpp; sourceTree = "<group>"; };
+B1C2D3E4F500010000000204 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+B1C2D3E4F500010000000205 /* AirportSTAIOCTL.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AirportSTAIOCTL.cpp; sourceTree = "<group>"; };
+B1C2D3E4F500010000000206 /* AirportVirtualIOCTL.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AirportVirtualIOCTL.cpp; sourceTree = "<group>"; };
+B1C2D3E4F500010000000207 /* AirportRtlwmInterface.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AirportRtlwmInterface.hpp; sourceTree = "<group>"; };
+B1C2D3E4F500010000000208 /* AirportRtlwmInterface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AirportRtlwmInterface.cpp; sourceTree = "<group>"; };
+B1C2D3E4F500010000000209 /* AirportRtlwmEthernetInterface.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AirportRtlwmEthernetInterface.hpp; sourceTree = "<group>"; };
+B1C2D3E4F50001000000020A /* AirportRtlwmEthernetInterface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AirportRtlwmEthernetInterface.cpp; sourceTree = "<group>"; };
+B1C2D3E4F50001000000020B /* AirportRtlwmSkywalkInterface.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AirportRtlwmSkywalkInterface.hpp; sourceTree = "<group>"; };
+B1C2D3E4F50001000000020C /* AirportRtlwmSkywalkInterface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AirportRtlwmSkywalkInterface.cpp; sourceTree = "<group>"; };
+B1C2D3E4F50001000000020D /* IOPCIEDeviceWrapper.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = IOPCIEDeviceWrapper.hpp; sourceTree = "<group>"; };
+B1C2D3E4F50001000000020E /* IOPCIEDeviceWrapper.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = IOPCIEDeviceWrapper.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 A1B2C3D4E5F6000100000010 /* Frameworks */ = {
+isa = PBXFrameworksBuildPhase;
+buildActionMask = 2147483647;
+files = (
+);
+runOnlyForDeploymentPostprocessing = 0;
+};
+B1C2D3E4F500010000000210 /* Frameworks */ = {
 isa = PBXFrameworksBuildPhase;
 buildActionMask = 2147483647;
 files = (
@@ -33,6 +62,7 @@ A1B2C3D4E5F6000100000020 = {
 isa = PBXGroup;
 children = (
 A1B2C3D4E5F6000100000021 /* rtlwm */,
+B1C2D3E4F500010000000220 /* Airportrtlwm */,
 A1B2C3D4E5F6000100000006 /* include */,
 A1B2C3D4E5F6000100000007 /* rtl80211 */,
 A1B2C3D4E5F6000100000022 /* Products */,
@@ -43,6 +73,7 @@ A1B2C3D4E5F6000100000022 /* Products */ = {
 isa = PBXGroup;
 children = (
 A1B2C3D4E5F6000100000003 /* rtlwm.kext */,
+B1C2D3E4F500010000000201 /* Airportrtlwm.kext */,
 );
 name = Products;
 sourceTree = "<group>";
@@ -56,6 +87,26 @@ A1B2C3D4E5F6000100000004 /* Info.plist */,
 path = rtlwm;
 sourceTree = "<group>";
 };
+B1C2D3E4F500010000000220 /* Airportrtlwm */ = {
+isa = PBXGroup;
+children = (
+B1C2D3E4F500010000000202 /* Airportrtlwm.hpp */,
+B1C2D3E4F500010000000203 /* Airportrtlwm.cpp */,
+B1C2D3E4F500010000000205 /* AirportSTAIOCTL.cpp */,
+B1C2D3E4F500010000000206 /* AirportVirtualIOCTL.cpp */,
+B1C2D3E4F500010000000207 /* AirportRtlwmInterface.hpp */,
+B1C2D3E4F500010000000208 /* AirportRtlwmInterface.cpp */,
+B1C2D3E4F500010000000209 /* AirportRtlwmEthernetInterface.hpp */,
+B1C2D3E4F50001000000020A /* AirportRtlwmEthernetInterface.cpp */,
+B1C2D3E4F50001000000020B /* AirportRtlwmSkywalkInterface.hpp */,
+B1C2D3E4F50001000000020C /* AirportRtlwmSkywalkInterface.cpp */,
+B1C2D3E4F50001000000020D /* IOPCIEDeviceWrapper.hpp */,
+B1C2D3E4F50001000000020E /* IOPCIEDeviceWrapper.cpp */,
+B1C2D3E4F500010000000204 /* Info.plist */,
+);
+path = Airportrtlwm;
+sourceTree = "<group>";
+};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -63,6 +114,14 @@ A1B2C3D4E5F6000100000011 /* Headers */ = {
 isa = PBXHeadersBuildPhase;
 buildActionMask = 2147483647;
 files = (
+);
+runOnlyForDeploymentPostprocessing = 0;
+};
+B1C2D3E4F500010000000211 /* Headers */ = {
+isa = PBXHeadersBuildPhase;
+buildActionMask = 2147483647;
+files = (
+B1C2D3E4F500010000000101 /* Airportrtlwm.hpp in Headers */,
 );
 runOnlyForDeploymentPostprocessing = 0;
 };
@@ -87,6 +146,24 @@ productName = rtlwm;
 productReference = A1B2C3D4E5F6000100000003 /* rtlwm.kext */;
 productType = "com.apple.product-type.kernel-extension";
 };
+B1C2D3E4F500010000000230 /* Airportrtlwm */ = {
+isa = PBXNativeTarget;
+buildConfigurationList = B1C2D3E4F500010000000241 /* Build configuration list for PBXNativeTarget "Airportrtlwm" */;
+buildPhases = (
+B1C2D3E4F500010000000211 /* Headers */,
+B1C2D3E4F500010000000212 /* Sources */,
+B1C2D3E4F500010000000210 /* Frameworks */,
+B1C2D3E4F500010000000213 /* Resources */,
+);
+buildRules = (
+);
+dependencies = (
+);
+name = Airportrtlwm;
+productName = Airportrtlwm;
+productReference = B1C2D3E4F500010000000201 /* Airportrtlwm.kext */;
+productType = "com.apple.product-type.kernel-extension";
+};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -97,6 +174,9 @@ LastUpgradeCheck = 1170;
 ORGANIZATIONNAME = Play;
 TargetAttributes = {
 A1B2C3D4E5F6000100000030 = {
+CreatedOnToolsVersion = 11.7;
+};
+B1C2D3E4F500010000000230 = {
 CreatedOnToolsVersion = 11.7;
 };
 };
@@ -115,12 +195,20 @@ projectDirPath = "";
 projectRoot = "";
 targets = (
 A1B2C3D4E5F6000100000030 /* rtlwm */,
+B1C2D3E4F500010000000230 /* Airportrtlwm */,
 );
 };
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 A1B2C3D4E5F6000100000013 /* Resources */ = {
+isa = PBXResourcesBuildPhase;
+buildActionMask = 2147483647;
+files = (
+);
+runOnlyForDeploymentPostprocessing = 0;
+};
+B1C2D3E4F500010000000213 /* Resources */ = {
 isa = PBXResourcesBuildPhase;
 buildActionMask = 2147483647;
 files = (
@@ -135,6 +223,20 @@ isa = PBXSourcesBuildPhase;
 buildActionMask = 2147483647;
 files = (
 A1B2C3D4E5F6000100000001 /* rtlwm_stub.cpp in Sources */,
+);
+runOnlyForDeploymentPostprocessing = 0;
+};
+B1C2D3E4F500010000000212 /* Sources */ = {
+isa = PBXSourcesBuildPhase;
+buildActionMask = 2147483647;
+files = (
+B1C2D3E4F500010000000102 /* Airportrtlwm.cpp in Sources */,
+B1C2D3E4F500010000000103 /* AirportSTAIOCTL.cpp in Sources */,
+B1C2D3E4F500010000000104 /* AirportVirtualIOCTL.cpp in Sources */,
+B1C2D3E4F500010000000105 /* AirportRtlwmInterface.cpp in Sources */,
+B1C2D3E4F500010000000106 /* AirportRtlwmEthernetInterface.cpp in Sources */,
+B1C2D3E4F500010000000107 /* AirportRtlwmSkywalkInterface.cpp in Sources */,
+B1C2D3E4F500010000000108 /* IOPCIEDeviceWrapper.cpp in Sources */,
 );
 runOnlyForDeploymentPostprocessing = 0;
 };
@@ -227,6 +329,54 @@ WRAPPER_EXTENSION = kext;
 };
 name = Release;
 };
+B1C2D3E4F500010000000270 /* Debug */ = {
+isa = XCBuildConfiguration;
+buildSettings = {
+CODE_SIGN_STYLE = Automatic;
+COMBINE_HIDPI_IMAGES = YES;
+CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/$(CONFIGURATION)";
+CURRENT_PROJECT_VERSION = 1.0.0d1;
+DEVELOPMENT_TEAM = M37Q3BB5FF;
+HEADER_SEARCH_PATHS = (
+"$(SRCROOT)/include",
+"$(SRCROOT)/rtl80211",
+"$(SRCROOT)/rtlwm",
+"$(SRCROOT)/rtlwm/**",
+"$(SRCROOT)/Airportrtlwm",
+);
+INFOPLIST_FILE = Airportrtlwm/Info.plist;
+MODULE_NAME = com.rtlwm.airportrtlwm;
+MODULE_VERSION = 1.0.0d1;
+PRODUCT_BUNDLE_IDENTIFIER = com.rtlwm.airportrtlwm;
+PRODUCT_NAME = "$(TARGET_NAME)";
+WRAPPER_EXTENSION = kext;
+};
+name = Debug;
+};
+B1C2D3E4F500010000000271 /* Release */ = {
+isa = XCBuildConfiguration;
+buildSettings = {
+CODE_SIGN_STYLE = Automatic;
+COMBINE_HIDPI_IMAGES = YES;
+CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/$(CONFIGURATION)";
+CURRENT_PROJECT_VERSION = 1.0.0d1;
+DEVELOPMENT_TEAM = M37Q3BB5FF;
+HEADER_SEARCH_PATHS = (
+"$(SRCROOT)/include",
+"$(SRCROOT)/rtl80211",
+"$(SRCROOT)/rtlwm",
+"$(SRCROOT)/rtlwm/**",
+"$(SRCROOT)/Airportrtlwm",
+);
+INFOPLIST_FILE = Airportrtlwm/Info.plist;
+MODULE_NAME = com.rtlwm.airportrtlwm;
+MODULE_VERSION = 1.0.0d1;
+PRODUCT_BUNDLE_IDENTIFIER = com.rtlwm.airportrtlwm;
+PRODUCT_NAME = "$(TARGET_NAME)";
+WRAPPER_EXTENSION = kext;
+};
+name = Release;
+};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -244,6 +394,15 @@ isa = XCConfigurationList;
 buildConfigurations = (
 A1B2C3D4E5F6000100000070 /* Debug */,
 A1B2C3D4E5F6000100000071 /* Release */,
+);
+defaultConfigurationIsVisible = 0;
+defaultConfigurationName = Release;
+};
+B1C2D3E4F500010000000241 /* Build configuration list for PBXNativeTarget "Airportrtlwm" */ = {
+isa = XCConfigurationList;
+buildConfigurations = (
+B1C2D3E4F500010000000270 /* Debug */,
+B1C2D3E4F500010000000271 /* Release */,
 );
 defaultConfigurationIsVisible = 0;
 defaultConfigurationName = Release;
