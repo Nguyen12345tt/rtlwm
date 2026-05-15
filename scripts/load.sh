@@ -18,4 +18,4 @@ fi
 
 echo "Loading rtlwm…"
 sudo kextload "$RTLWM_KEXT"
-echo "Done.  Check Console.app / 'log show --predicate \"eventMessage CONTAINS[cd] \\\"rtlwm\\\"\"' for messages."
+echo "Done. Check Console.app / 'log show --predicate \"eventMessage CONTAINS[cd] \\\"rtlwm\\\"\"' for messages."
