@@ -697,10 +697,11 @@ IOReturn RtlHal_rtw88::disable(IONetworkInterface *interface)
     if (!hw.running)
         return kIOReturnSuccess;
     stopTxRx();
+    hw.running = false;
     connState = RTLWM_CONN_STATE_INIT;
+    reconnectBudget = 0;
     reconnectDelayTicks = 0;
     (void)request80211State(RTLWM_CONN_STATE_INIT, 0);
-    hw.running = false;
     return kIOReturnSuccess;
 }
 
@@ -809,15 +810,19 @@ int RtlHal_rtw88::ieee80211NewState(struct ieee80211com *ic, enum ieee80211_stat
     if (!self)
         return 0;
 
-    self->handle80211StateTransition((int)nstate, arg);
+    int ret = 0;
     if (self->icNewstateHook && self->icNewstateHook != &RtlHal_rtw88::ieee80211NewState)
-        return self->icNewstateHook(ic, nstate, arg);
-    return 0;
+        ret = self->icNewstateHook(ic, nstate, arg);
+
+    if (ret == 0)
+        self->handle80211StateTransition((int)nstate, arg);
+    return ret;
 }
 
 void RtlHal_rtw88::handle80211StateTransition(int nstate, int arg)
 {
     (void)arg;
+    const uint8_t prevState = connState;
     switch (nstate) {
     case RTLWM_CONN_STATE_SCAN:
         connState = RTLWM_CONN_STATE_SCAN;
@@ -835,6 +840,15 @@ void RtlHal_rtw88::handle80211StateTransition(int nstate, int arg)
         break;
     default:
         connState = RTLWM_CONN_STATE_INIT;
+        if (hw.running &&
+            (prevState == RTLWM_CONN_STATE_SCAN ||
+             prevState == RTLWM_CONN_STATE_AUTH ||
+             prevState == RTLWM_CONN_STATE_ASSOC ||
+             prevState == RTLWM_CONN_STATE_DATA)) {
+            if (reconnectBudget == 0)
+                reconnectBudget = 3;
+            reconnectDelayTicks = 2;
+        }
         break;
     }
 }
