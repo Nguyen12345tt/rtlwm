@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# unload.sh – Unload Airportrtlwm kext
+# unload.sh – Unload rtlwm kext
 #
 # Must be run as root.
 #
@@ -7,5 +7,5 @@
 
 set -euo pipefail
 
-echo "Unloading Airportrtlwm…"
-sudo kextunload -b com.rtlwm.airportrtlwm && echo "Done." || true
+echo "Unloading rtlwm…"
+sudo kextunload -b com.rtlwm.rtlwm && echo "Done." || true

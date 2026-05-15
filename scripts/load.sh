@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# load.sh – Load Airportrtlwm kext for testing
+# load.sh – Load rtlwm kext for testing
 #
 # Must be run as root.  Requires a macOS system with SIP partially disabled
 # or a kernel debug kit environment.
@@ -9,13 +9,13 @@
 set -euo pipefail
 
 KEXT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-AIRPORTRTLWM="$KEXT_DIR/build/Debug/Airportrtlwm.kext"
+RTLWM_KEXT="$KEXT_DIR/build/Debug/rtlwm.kext"
 
-if [ ! -d "$AIRPORTRTLWM" ]; then
-    echo "Error: $AIRPORTRTLWM not found.  Build the project first."
+if [ ! -d "$RTLWM_KEXT" ]; then
+    echo "Error: $RTLWM_KEXT not found.  Build the project first."
     exit 1
 fi
 
-echo "Loading Airportrtlwm…"
-sudo kextload "$AIRPORTRTLWM"
+echo "Loading rtlwm…"
+sudo kextload "$RTLWM_KEXT"
 echo "Done.  Check Console.app / 'log show --predicate …rtlwm…' for messages."

@@ -14,7 +14,6 @@ A1B2C3D4E5F6000100000001 /* rtlwm_stub.cpp in Sources */ = {isa = PBXBuildFile; 
 A1B2C3D4E5F6000100000003 /* rtlwm.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = rtlwm.kext; sourceTree = BUILT_PRODUCTS_DIR; };
 A1B2C3D4E5F6000100000002 /* rtlwm_stub.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = rtlwm_stub.cpp; sourceTree = "<group>"; };
 A1B2C3D4E5F6000100000004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-A1B2C3D4E5F6000100000005 /* Airportrtlwm */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Airportrtlwm; sourceTree = "<group>"; };
 A1B2C3D4E5F6000100000006 /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; path = include; sourceTree = "<group>"; };
 A1B2C3D4E5F6000100000007 /* rtl80211 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = rtl80211; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -34,7 +33,6 @@ A1B2C3D4E5F6000100000020 = {
 isa = PBXGroup;
 children = (
 A1B2C3D4E5F6000100000021 /* rtlwm */,
-A1B2C3D4E5F6000100000005 /* Airportrtlwm */,
 A1B2C3D4E5F6000100000006 /* include */,
 A1B2C3D4E5F6000100000007 /* rtl80211 */,
 A1B2C3D4E5F6000100000022 /* Products */,
@@ -192,7 +190,6 @@ CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/$(CONFIGURATION)";
 CURRENT_PROJECT_VERSION = 1.0.0d1;
 DEVELOPMENT_TEAM = M37Q3BB5FF;
 HEADER_SEARCH_PATHS = (
-"$(SRCROOT)/Airportrtlwm",
 "$(SRCROOT)/include",
 "$(SRCROOT)/rtl80211",
 "$(SRCROOT)/rtlwm",
@@ -216,7 +213,6 @@ CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/$(CONFIGURATION)";
 CURRENT_PROJECT_VERSION = 1.0.0d1;
 DEVELOPMENT_TEAM = M37Q3BB5FF;
 HEADER_SEARCH_PATHS = (
-"$(SRCROOT)/Airportrtlwm",
 "$(SRCROOT)/include",
 "$(SRCROOT)/rtl80211",
 "$(SRCROOT)/rtlwm",
