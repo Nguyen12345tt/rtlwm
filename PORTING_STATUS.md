@@ -20,7 +20,9 @@ Repository đã mirror cây thư mục theo cấu trúc itlwm:
 3. Pipeline firmware nhúng vào kext:
    - `scripts/fw_gen.sh`
    - `include/FwData.h`
-4. Hoàn thiện IOCTL handlers trong `AirportSTAIOCTL.cpp` và `AirportVirtualIOCTL.cpp`:
+   - `rtlwm/firmware/fw_list.cpp` hiện embed 9 firmware runtime (`rtw8723d/8821c/8822b/8822c/8851b/8852a/8852b/8852c/8922a`)
+4. Đã rà soát đồng bộ PCI ID giữa `rtlwm/Info.plist`, `Airportrtlwm/Info.plist`, `rtlwm/rtlwm.cpp` và HAL attach switch (RTW88/RTW89): đầy đủ 10 device ID.
+5. Hoàn thiện IOCTL handlers trong `AirportSTAIOCTL.cpp` và `AirportVirtualIOCTL.cpp`:
    - Bổ sung đầy đủ các GET handler: `STATUS_DEV_NAME`, `HT_CAPABILITY`, `VHT_CAPABILITY`, `GUARD_INTERVAL`, `BLOCK_ACK`, `PHY_SUB_MODE`, v.v.
    - Bổ sung đầy đủ các SET handler: `REASSOCIATE`, `CHANNEL`, `TX_ANTENNA`, `RX_ANTENNA`, `INT_MIT`, `GUARD_INTERVAL`, `BLOCK_ACK`, `PHY_SUB_MODE`, v.v.
    - Sửa dữ liệu trả về RSSI/noise (điền đầy đủ các trường `_ext` và `aggregate_*_ext`).

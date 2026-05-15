@@ -943,7 +943,7 @@ int RtlHal_rtw88::getTxNSS()
 
 const char *RtlHal_rtw88::getFirmwareName()
 {
-    return hw.fw_name[0] ? hw.fw_name : "rtl8822c_fw.bin";
+    return hw.fw_name[0] ? hw.fw_name : "rtw8822c_fw.bin";
 }
 
 UInt32 RtlHal_rtw88::supportedFeatures()
