@@ -1,0 +1,258 @@
+// !$*UTF8*$!
+{
+archiveVersion = 1;
+classes = {
+};
+objectVersion = 50;
+objects = {
+
+/* Begin PBXBuildFile section */
+A1B2C3D4E5F6000100000001 /* rtlwm_stub.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000100000002 /* rtlwm_stub.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+A1B2C3D4E5F6000100000003 /* rtlwm.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = rtlwm.kext; sourceTree = BUILT_PRODUCTS_DIR; };
+A1B2C3D4E5F6000100000002 /* rtlwm_stub.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = rtlwm_stub.cpp; sourceTree = "<group>"; };
+A1B2C3D4E5F6000100000004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+A1B2C3D4E5F6000100000005 /* Airportrtlwm */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Airportrtlwm; sourceTree = "<group>"; };
+A1B2C3D4E5F6000100000006 /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; path = include; sourceTree = "<group>"; };
+A1B2C3D4E5F6000100000007 /* rtl80211 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = rtl80211; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+A1B2C3D4E5F6000100000010 /* Frameworks */ = {
+isa = PBXFrameworksBuildPhase;
+buildActionMask = 2147483647;
+files = (
+);
+runOnlyForDeploymentPostprocessing = 0;
+};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+A1B2C3D4E5F6000100000020 = {
+isa = PBXGroup;
+children = (
+A1B2C3D4E5F6000100000021 /* rtlwm */,
+A1B2C3D4E5F6000100000005 /* Airportrtlwm */,
+A1B2C3D4E5F6000100000006 /* include */,
+A1B2C3D4E5F6000100000007 /* rtl80211 */,
+A1B2C3D4E5F6000100000022 /* Products */,
+);
+sourceTree = "<group>";
+};
+A1B2C3D4E5F6000100000022 /* Products */ = {
+isa = PBXGroup;
+children = (
+A1B2C3D4E5F6000100000003 /* rtlwm.kext */,
+);
+name = Products;
+sourceTree = "<group>";
+};
+A1B2C3D4E5F6000100000021 /* rtlwm */ = {
+isa = PBXGroup;
+children = (
+A1B2C3D4E5F6000100000002 /* rtlwm_stub.cpp */,
+A1B2C3D4E5F6000100000004 /* Info.plist */,
+);
+path = rtlwm;
+sourceTree = "<group>";
+};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+A1B2C3D4E5F6000100000011 /* Headers */ = {
+isa = PBXHeadersBuildPhase;
+buildActionMask = 2147483647;
+files = (
+);
+runOnlyForDeploymentPostprocessing = 0;
+};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+A1B2C3D4E5F6000100000030 /* rtlwm */ = {
+isa = PBXNativeTarget;
+buildConfigurationList = A1B2C3D4E5F6000100000041 /* Build configuration list for PBXNativeTarget "rtlwm" */;
+buildPhases = (
+A1B2C3D4E5F6000100000011 /* Headers */,
+A1B2C3D4E5F6000100000012 /* Sources */,
+A1B2C3D4E5F6000100000010 /* Frameworks */,
+A1B2C3D4E5F6000100000013 /* Resources */,
+);
+buildRules = (
+);
+dependencies = (
+);
+name = rtlwm;
+productName = rtlwm;
+productReference = A1B2C3D4E5F6000100000003 /* rtlwm.kext */;
+productType = "com.apple.product-type.kernel-extension";
+};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+A1B2C3D4E5F6000100000050 /* Project object */ = {
+isa = PBXProject;
+attributes = {
+LastUpgradeCheck = 1170;
+ORGANIZATIONNAME = Play;
+TargetAttributes = {
+A1B2C3D4E5F6000100000030 = {
+CreatedOnToolsVersion = 11.7;
+};
+};
+};
+buildConfigurationList = A1B2C3D4E5F6000100000040 /* Build configuration list for PBXProject "rtlwm" */;
+compatibilityVersion = "Xcode 9.3";
+developmentRegion = en;
+hasScannedForEncodings = 0;
+knownRegions = (
+en,
+Base,
+);
+mainGroup = A1B2C3D4E5F6000100000020;
+productRefGroup = A1B2C3D4E5F6000100000022 /* Products */;
+projectDirPath = "";
+projectRoot = "";
+targets = (
+A1B2C3D4E5F6000100000030 /* rtlwm */,
+);
+};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+A1B2C3D4E5F6000100000013 /* Resources */ = {
+isa = PBXResourcesBuildPhase;
+buildActionMask = 2147483647;
+files = (
+);
+runOnlyForDeploymentPostprocessing = 0;
+};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+A1B2C3D4E5F6000100000012 /* Sources */ = {
+isa = PBXSourcesBuildPhase;
+buildActionMask = 2147483647;
+files = (
+A1B2C3D4E5F6000100000001 /* rtlwm_stub.cpp in Sources */,
+);
+runOnlyForDeploymentPostprocessing = 0;
+};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+A1B2C3D4E5F6000100000060 /* Debug */ = {
+isa = XCBuildConfiguration;
+buildSettings = {
+ALWAYS_SEARCH_USER_PATHS = NO;
+CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+CLANG_CXX_LIBRARY = "libc++";
+CLANG_ENABLE_MODULES = YES;
+COPY_PHASE_STRIP = NO;
+DEBUG_INFORMATION_FORMAT = dwarf;
+GCC_C_LANGUAGE_STANDARD = gnu11;
+GCC_DYNAMIC_NO_PIC = NO;
+GCC_NO_COMMON_BLOCKS = YES;
+GCC_OPTIMIZATION_LEVEL = 0;
+GCC_PREPROCESSOR_DEFINITIONS = (
+"DEBUG=1",
+"$(inherited)",
+);
+MACOSX_DEPLOYMENT_TARGET = 10.15;
+ONLY_ACTIVE_ARCH = YES;
+SDKROOT = macosx;
+};
+name = Debug;
+};
+A1B2C3D4E5F6000100000061 /* Release */ = {
+isa = XCBuildConfiguration;
+buildSettings = {
+ALWAYS_SEARCH_USER_PATHS = NO;
+CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+CLANG_CXX_LIBRARY = "libc++";
+CLANG_ENABLE_MODULES = YES;
+COPY_PHASE_STRIP = NO;
+DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+ENABLE_NS_ASSERTIONS = NO;
+GCC_C_LANGUAGE_STANDARD = gnu11;
+GCC_NO_COMMON_BLOCKS = YES;
+MACOSX_DEPLOYMENT_TARGET = 10.15;
+SDKROOT = macosx;
+};
+name = Release;
+};
+A1B2C3D4E5F6000100000070 /* Debug */ = {
+isa = XCBuildConfiguration;
+buildSettings = {
+CODE_SIGN_STYLE = Automatic;
+COMBINE_HIDPI_IMAGES = YES;
+CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/$(CONFIGURATION)";
+CURRENT_PROJECT_VERSION = 1.0.0d1;
+DEVELOPMENT_TEAM = M37Q3BB5FF;
+HEADER_SEARCH_PATHS = (
+"$(SRCROOT)/Airportrtlwm",
+"$(SRCROOT)/include",
+"$(SRCROOT)/rtl80211",
+"$(SRCROOT)/rtlwm",
+"$(SRCROOT)/rtlwm/**",
+);
+INFOPLIST_FILE = rtlwm/Info.plist;
+MODULE_NAME = com.rtlwm.rtlwm;
+MODULE_VERSION = 1.0.0d1;
+PRODUCT_BUNDLE_IDENTIFIER = com.rtlwm.rtlwm;
+PRODUCT_NAME = "$(TARGET_NAME)";
+WRAPPER_EXTENSION = kext;
+};
+name = Debug;
+};
+A1B2C3D4E5F6000100000071 /* Release */ = {
+isa = XCBuildConfiguration;
+buildSettings = {
+CODE_SIGN_STYLE = Automatic;
+COMBINE_HIDPI_IMAGES = YES;
+CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/$(CONFIGURATION)";
+CURRENT_PROJECT_VERSION = 1.0.0d1;
+DEVELOPMENT_TEAM = M37Q3BB5FF;
+HEADER_SEARCH_PATHS = (
+"$(SRCROOT)/Airportrtlwm",
+"$(SRCROOT)/include",
+"$(SRCROOT)/rtl80211",
+"$(SRCROOT)/rtlwm",
+"$(SRCROOT)/rtlwm/**",
+);
+INFOPLIST_FILE = rtlwm/Info.plist;
+MODULE_NAME = com.rtlwm.rtlwm;
+MODULE_VERSION = 1.0.0d1;
+PRODUCT_BUNDLE_IDENTIFIER = com.rtlwm.rtlwm;
+PRODUCT_NAME = "$(TARGET_NAME)";
+WRAPPER_EXTENSION = kext;
+};
+name = Release;
+};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+A1B2C3D4E5F6000100000040 /* Build configuration list for PBXProject "rtlwm" */ = {
+isa = XCConfigurationList;
+buildConfigurations = (
+A1B2C3D4E5F6000100000060 /* Debug */,
+A1B2C3D4E5F6000100000061 /* Release */,
+);
+defaultConfigurationIsVisible = 0;
+defaultConfigurationName = Release;
+};
+A1B2C3D4E5F6000100000041 /* Build configuration list for PBXNativeTarget "rtlwm" */ = {
+isa = XCConfigurationList;
+buildConfigurations = (
+A1B2C3D4E5F6000100000070 /* Debug */,
+A1B2C3D4E5F6000100000071 /* Release */,
+);
+defaultConfigurationIsVisible = 0;
+defaultConfigurationName = Release;
+};
+/* End XCConfigurationList section */
+};
+rootObject = A1B2C3D4E5F6000100000050 /* Project object */;
+}
