@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.rtlwm.rtlwm</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>rtlwm</string>
+	<key>CFBundlePackageType</key>
+	<string>KEXT</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>IOKitPersonalities</key>
+	<dict>
+		<key>rtlwm</key>
+		<dict>
+			<key>CFBundleIdentifier</key>
+			<string>com.rtlwm.rtlwm</string>
+			<key>IOClass</key>
+			<string>rtlwm</string>
+			<key>IOPCIPrimaryMatch</key>
+			<string>0xB82210EC 0xC82210EC 0xD72310EC 0xC82110EC 0xC82F10EC 0x885210EC 0xB85210EC 0x885110EC 0xA85210EC 0x892210EC</string>
+			<key>IOProbeScore</key>
+			<integer>2000</integer>
+			<key>IOProviderClass</key>
+			<string>IOPCIDevice</string>
+		</dict>
+	</dict>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2024 Airportrtlwm Contributors. All rights reserved.</string>
+	<key>OSBundleLibraries</key>
+	<dict>
+		<key>com.apple.kpi.bsd</key>
+		<string>8.0.0b1</string>
+		<key>com.apple.kpi.iokit</key>
+		<string>8.0.0b1</string>
+		<key>com.apple.kpi.libkern</key>
+		<string>8.0.0b1</string>
+		<key>com.apple.kpi.mach</key>
+		<string>8.0.0b1</string>
+	</dict>
+</dict>
+</plist>

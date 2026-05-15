@@ -7,22 +7,161 @@
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<string>com.rtlwm.airportrtlwm</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
+	<string>AirportRtlwm</string>
 	<key>CFBundlePackageType</key>
-	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<string>KEXT</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>1.0.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<!-- RTW88 and RTW89 PCI IDs – add sub-device IDs as needed -->
 	<key>IOKitPersonalities</key>
-	<dict/>
+	<dict>
+		<!-- RTL8822BE -->
+		<key>AirportRtlwm_RTL8822BE</key>
+		<dict>
+			<key>CFBundleIdentifier</key>
+			<string>com.rtlwm.airportrtlwm</string>
+			<key>IOClass</key>
+			<string>AirportRtlwm</string>
+			<key>IOPCIPrimaryMatch</key>
+			<string>0xB82210EC</string>
+			<key>IOProbeScore</key>
+			<integer>2000</integer>
+			<key>IOProviderClass</key>
+			<string>IOPCIDevice</string>
+		</dict>
+		<!-- RTL8822CE -->
+		<key>AirportRtlwm_RTL8822CE</key>
+		<dict>
+			<key>CFBundleIdentifier</key>
+			<string>com.rtlwm.airportrtlwm</string>
+			<key>IOClass</key>
+			<string>AirportRtlwm</string>
+			<key>IOPCIPrimaryMatch</key>
+			<string>0xC82210EC</string>
+			<key>IOProbeScore</key>
+			<integer>2000</integer>
+			<key>IOProviderClass</key>
+			<string>IOPCIDevice</string>
+		</dict>
+		<!-- RTL8723DE -->
+		<key>AirportRtlwm_RTL8723DE</key>
+		<dict>
+			<key>CFBundleIdentifier</key>
+			<string>com.rtlwm.airportrtlwm</string>
+			<key>IOClass</key>
+			<string>AirportRtlwm</string>
+			<key>IOPCIPrimaryMatch</key>
+			<string>0xD72310EC</string>
+			<key>IOProbeScore</key>
+			<integer>2000</integer>
+			<key>IOProviderClass</key>
+			<string>IOPCIDevice</string>
+		</dict>
+		<!-- RTL8821CE -->
+		<key>AirportRtlwm_RTL8821CE</key>
+		<dict>
+			<key>CFBundleIdentifier</key>
+			<string>com.rtlwm.airportrtlwm</string>
+			<key>IOClass</key>
+			<string>AirportRtlwm</string>
+			<key>IOPCIPrimaryMatch</key>
+			<string>0xC82110EC 0xC82F10EC</string>
+			<key>IOProbeScore</key>
+			<integer>2000</integer>
+			<key>IOProviderClass</key>
+			<string>IOPCIDevice</string>
+		</dict>
+		<!-- RTL8852AE -->
+		<key>AirportRtlwm_RTL8852AE</key>
+		<dict>
+			<key>CFBundleIdentifier</key>
+			<string>com.rtlwm.airportrtlwm</string>
+			<key>IOClass</key>
+			<string>AirportRtlwm</string>
+			<key>IOPCIPrimaryMatch</key>
+			<string>0x885210EC</string>
+			<key>IOProbeScore</key>
+			<integer>2000</integer>
+			<key>IOProviderClass</key>
+			<string>IOPCIDevice</string>
+		</dict>
+		<!-- RTL8852BE -->
+		<key>AirportRtlwm_RTL8852BE</key>
+		<dict>
+			<key>CFBundleIdentifier</key>
+			<string>com.rtlwm.airportrtlwm</string>
+			<key>IOClass</key>
+			<string>AirportRtlwm</string>
+			<key>IOPCIPrimaryMatch</key>
+			<string>0xB85210EC</string>
+			<key>IOProbeScore</key>
+			<integer>2000</integer>
+			<key>IOProviderClass</key>
+			<string>IOPCIDevice</string>
+		</dict>
+		<!-- RTL8851BE -->
+		<key>AirportRtlwm_RTL8851BE</key>
+		<dict>
+			<key>CFBundleIdentifier</key>
+			<string>com.rtlwm.airportrtlwm</string>
+			<key>IOClass</key>
+			<string>AirportRtlwm</string>
+			<key>IOPCIPrimaryMatch</key>
+			<string>0x885110EC</string>
+			<key>IOProbeScore</key>
+			<integer>2000</integer>
+			<key>IOProviderClass</key>
+			<string>IOPCIDevice</string>
+		</dict>
+		<!-- RTL8852CE -->
+		<key>AirportRtlwm_RTL8852CE</key>
+		<dict>
+			<key>CFBundleIdentifier</key>
+			<string>com.rtlwm.airportrtlwm</string>
+			<key>IOClass</key>
+			<string>AirportRtlwm</string>
+			<key>IOPCIPrimaryMatch</key>
+			<string>0xA85210EC</string>
+			<key>IOProbeScore</key>
+			<integer>2000</integer>
+			<key>IOProviderClass</key>
+			<string>IOPCIDevice</string>
+		</dict>
+		<!-- RTL8922AE -->
+		<key>AirportRtlwm_RTL8922AE</key>
+		<dict>
+			<key>CFBundleIdentifier</key>
+			<string>com.rtlwm.airportrtlwm</string>
+			<key>IOClass</key>
+			<string>AirportRtlwm</string>
+			<key>IOPCIPrimaryMatch</key>
+			<string>0x892210EC</string>
+			<key>IOProbeScore</key>
+			<integer>2000</integer>
+			<key>IOProviderClass</key>
+			<string>IOPCIDevice</string>
+		</dict>
+	</dict>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2026 Play. All rights reserved.</string>
+	<string>Copyright © 2024 AirportRtlwm Contributors. All rights reserved.</string>
 	<key>OSBundleLibraries</key>
-	<dict/>
+	<dict>
+		<key>com.apple.iokit.IO80211Family</key>
+		<string>1200.12.2</string>
+		<key>com.apple.kpi.bsd</key>
+		<string>8.0.0b1</string>
+		<key>com.apple.kpi.iokit</key>
+		<string>8.0.0b1</string>
+		<key>com.apple.kpi.libkern</key>
+		<string>8.0.0b1</string>
+		<key>com.apple.kpi.mach</key>
+		<string>8.0.0b1</string>
+	</dict>
 </dict>
 </plist>
