@@ -12,10 +12,10 @@
 #include <sys/errno.h>
 
 /* Forward declaration – implemented in AirportSTAIOCTL.cpp */
-SInt32 rtlwmHandleStaIoctl(Airportrtlwm *controller, UInt requestType, int request,
+SInt32 rtlwmHandleStaIoctl(AirportRtlwm *controller, UInt requestType, int request,
                            IO80211Interface *interface, void *data);
 
-SInt32 rtlwmHandleVirtualIoctl(Airportrtlwm *controller, UInt requestType, int request,
+SInt32 rtlwmHandleVirtualIoctl(AirportRtlwm *controller, UInt requestType, int request,
                                IO80211VirtualInterface *interface, void *data)
 {
     (void)interface;

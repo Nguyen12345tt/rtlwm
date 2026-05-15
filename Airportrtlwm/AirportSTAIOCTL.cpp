@@ -222,7 +222,7 @@ static SInt32 rtlwmGetRssi(apple80211_rssi_data *out)
     return kIOReturnSuccess;
 }
 
-static SInt32 rtlwmGetNoise(Airportrtlwm *controller, apple80211_noise_data *out)
+static SInt32 rtlwmGetNoise(AirportRtlwm *controller, apple80211_noise_data *out)
 {
     if (!controller || !rtlwmInitVersioned(out))
         return EINVAL;
@@ -263,7 +263,7 @@ static SInt32 rtlwmGetCapabilities(apple80211_capability_data *out)
     return kIOReturnSuccess;
 }
 
-static SInt32 rtlwmGetState(Airportrtlwm *controller, apple80211_state_data *out)
+static SInt32 rtlwmGetState(AirportRtlwm *controller, apple80211_state_data *out)
 {
     if (!controller || !rtlwmInitVersioned(out))
         return EINVAL;
@@ -306,7 +306,7 @@ static SInt32 rtlwmGetIntMit(apple80211_intmit_data *out)
     return kIOReturnSuccess;
 }
 
-static SInt32 rtlwmGetPower(Airportrtlwm *controller, apple80211_power_data *out)
+static SInt32 rtlwmGetPower(AirportRtlwm *controller, apple80211_power_data *out)
 {
     if (!controller || !rtlwmInitVersioned(out))
         return EINVAL;
@@ -343,7 +343,7 @@ static SInt32 rtlwmGetRateSet(apple80211_rate_set_data *out)
     return kIOReturnSuccess;
 }
 
-static SInt32 rtlwmGetSupportedChannels(Airportrtlwm *controller, apple80211_sup_channel_data *out)
+static SInt32 rtlwmGetSupportedChannels(AirportRtlwm *controller, apple80211_sup_channel_data *out)
 {
     if (!controller || !rtlwmInitVersioned(out))
         return EINVAL;
@@ -433,7 +433,7 @@ static SInt32 rtlwmGetApIeList(apple80211_ap_ie_data *out)
     return kIOReturnSuccess;
 }
 
-static SInt32 rtlwmGetCountryCode(Airportrtlwm *controller, apple80211_country_code_data *out)
+static SInt32 rtlwmGetCountryCode(AirportRtlwm *controller, apple80211_country_code_data *out)
 {
     if (!controller || !rtlwmInitVersioned(out))
         return EINVAL;
@@ -450,7 +450,7 @@ static SInt32 rtlwmGetCountryCode(Airportrtlwm *controller, apple80211_country_c
     return kIOReturnSuccess;
 }
 
-static SInt32 rtlwmGetRadioInfo(Airportrtlwm *controller, apple80211_radio_info_data *out)
+static SInt32 rtlwmGetRadioInfo(AirportRtlwm *controller, apple80211_radio_info_data *out)
 {
     if (!controller || !rtlwmInitVersioned(out))
         return EINVAL;
@@ -475,7 +475,7 @@ static SInt32 rtlwmGetMcs(apple80211_mcs_data *out)
     return kIOReturnSuccess;
 }
 
-static SInt32 rtlwmGetMcsVht(Airportrtlwm *controller, apple80211_mcs_vht_data *out)
+static SInt32 rtlwmGetMcsVht(AirportRtlwm *controller, apple80211_mcs_vht_data *out)
 {
     if (!controller || !rtlwmInitVersioned(out))
         return EINVAL;
@@ -503,7 +503,7 @@ static SInt32 rtlwmGetVhtMcsIndexSet(apple80211_vht_mcs_index_set_data *out)
     return kIOReturnSuccess;
 }
 
-static SInt32 rtlwmGetTxNss(Airportrtlwm *controller, apple80211_tx_nss_data *out)
+static SInt32 rtlwmGetTxNss(AirportRtlwm *controller, apple80211_tx_nss_data *out)
 {
     if (!controller || !rtlwmInitVersioned(out))
         return EINVAL;
@@ -512,7 +512,7 @@ static SInt32 rtlwmGetTxNss(Airportrtlwm *controller, apple80211_tx_nss_data *ou
     return kIOReturnSuccess;
 }
 
-static SInt32 rtlwmGetNss(Airportrtlwm *controller, apple80211_nss_data *out)
+static SInt32 rtlwmGetNss(AirportRtlwm *controller, apple80211_nss_data *out)
 {
     if (!controller || !rtlwmInitVersioned(out))
         return EINVAL;
@@ -531,7 +531,7 @@ static SInt32 rtlwmGetRoamThreshold(apple80211_roam_threshold_data *out)
     return kIOReturnSuccess;
 }
 
-static SInt32 rtlwmGetLinkChangedEventData(Airportrtlwm *controller, apple80211_link_changed_event_data *out)
+static SInt32 rtlwmGetLinkChangedEventData(AirportRtlwm *controller, apple80211_link_changed_event_data *out)
 {
     if (!controller || !out)
         return EINVAL;
@@ -632,7 +632,7 @@ static SInt32 rtlwmGetStatusDevName(apple80211_status_dev_data *out)
     return kIOReturnSuccess;
 }
 
-static SInt32 rtlwmGetHtCapability(Airportrtlwm *controller, apple80211_ht_capability *out)
+static SInt32 rtlwmGetHtCapability(AirportRtlwm *controller, apple80211_ht_capability *out)
 {
     if (!out)
         return EINVAL;
@@ -710,7 +710,7 @@ static SInt32 rtlwmGetPhySubMode(apple80211_physubmode_data *out)
     return kIOReturnSuccess;
 }
 
-static SInt32 rtlwmHandleDisassociate(Airportrtlwm *controller)
+static SInt32 rtlwmHandleDisassociate(AirportRtlwm *controller)
 {
     if (RtlDriverController *driverController = controller ? controller->getDriverController() : nullptr)
         driverController->clearScanningFlags();
@@ -746,7 +746,7 @@ static SInt32 rtlwmHandleAssociate(const apple80211_assoc_data *in)
     return kIOReturnSuccess;
 }
 
-SInt32 rtlwmHandleStaIoctl(Airportrtlwm *controller, UInt requestType, int request,
+SInt32 rtlwmHandleStaIoctl(AirportRtlwm *controller, UInt requestType, int request,
                            IO80211Interface *interface, void *data)
 {
     (void)interface;

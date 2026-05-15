@@ -1,5 +1,5 @@
 /*
- * Airportrtlwm.cpp – Native Airport interface for Realtek WiFi
+ * AirportRtlwm.cpp – Native Airport interface for Realtek WiFi
  *
  * Adapted from OpenIntelWireless/itlwm – AirportItlwm.cpp (GPLv2)
  *
@@ -11,18 +11,18 @@
 
 #include "Airportrtlwm.hpp"
 
-OSDefineMetaClassAndStructors(Airportrtlwm, IO80211ControllerBase)
+OSDefineMetaClassAndStructors(AirportRtlwm, IO80211ControllerBase)
 
-SInt32 rtlwmHandleStaIoctl(Airportrtlwm *controller, UInt requestType, int request,
+SInt32 rtlwmHandleStaIoctl(AirportRtlwm *controller, UInt requestType, int request,
                            IO80211Interface *interface, void *data);
-SInt32 rtlwmHandleVirtualIoctl(Airportrtlwm *controller, UInt requestType, int request,
+SInt32 rtlwmHandleVirtualIoctl(AirportRtlwm *controller, UInt requestType, int request,
                                IO80211VirtualInterface *interface, void *data);
 
 /* --------------------------------------------------------------------------
  * IOService lifecycle
  * -------------------------------------------------------------------------- */
 
-bool Airportrtlwm::init(OSDictionary *dict)
+bool AirportRtlwm::init(OSDictionary *dict)
 {
     if (!IO80211ControllerBase::init(dict))
         return false;
@@ -35,11 +35,11 @@ bool Airportrtlwm::init(OSDictionary *dict)
     return true;
 }
 
-bool Airportrtlwm::start(IOService *provider)
+bool AirportRtlwm::start(IOService *provider)
 {
     pciDevice = OSDynamicCast(IOPCIDevice, provider);
     if (!pciDevice) {
-        IOLog("Airportrtlwm: provider is not a PCIDevice\n");
+        IOLog("AirportRtlwm: provider is not a PCIDevice\n");
         return false;
     }
 
@@ -55,12 +55,12 @@ bool Airportrtlwm::start(IOService *provider)
      * and attach it.
      */
 
-    IOLog("Airportrtlwm: started\n");
+    IOLog("AirportRtlwm: started\n");
     registerService();
     return true;
 }
 
-void Airportrtlwm::stop(IOService *provider)
+void AirportRtlwm::stop(IOService *provider)
 {
     if (infraInterface) {
         detachInterface(infraInterface);
@@ -74,7 +74,7 @@ void Airportrtlwm::stop(IOService *provider)
     IO80211ControllerBase::stop(provider);
 }
 
-void Airportrtlwm::free()
+void AirportRtlwm::free()
 {
     if (commandGate) {
         commandGate->release();
@@ -87,13 +87,13 @@ void Airportrtlwm::free()
     IO80211ControllerBase::free();
 }
 
-bool Airportrtlwm::createWorkLoop()
+bool AirportRtlwm::createWorkLoop()
 {
     workLoop = IOWorkLoop::workLoop();
     return workLoop != nullptr;
 }
 
-IOWorkLoop *Airportrtlwm::getWorkLoop() const
+IOWorkLoop *AirportRtlwm::getWorkLoop() const
 {
     return workLoop;
 }
@@ -102,33 +102,33 @@ IOWorkLoop *Airportrtlwm::getWorkLoop() const
  * IO80211Controller mandatory overrides
  * -------------------------------------------------------------------------- */
 
-SInt32 Airportrtlwm::apple80211Request(UInt requestType, int request,
+SInt32 AirportRtlwm::apple80211Request(UInt requestType, int request,
                                         IO80211Interface *interface,
                                         void *data)
 {
     return rtlwmHandleStaIoctl(this, requestType, request, interface, data);
 }
 
-SInt32 Airportrtlwm::apple80211VirtualRequest(UInt requestType, int request,
+SInt32 AirportRtlwm::apple80211VirtualRequest(UInt requestType, int request,
                                                IO80211VirtualInterface *interface,
                                                void *data)
 {
     return rtlwmHandleVirtualIoctl(this, requestType, request, interface, data);
 }
 
-SInt32 Airportrtlwm::stopDMA()
+SInt32 AirportRtlwm::stopDMA()
 {
     if (halService)
         halService->disable(infraInterface);
     return kIOReturnSuccess;
 }
 
-UInt32 Airportrtlwm::hardwareOutputQueueDepth(IO80211Interface *)
+UInt32 AirportRtlwm::hardwareOutputQueueDepth(IO80211Interface *)
 {
     return RTLWM_TX_RING_SZ;
 }
 
-SInt32 Airportrtlwm::performCountryCodeOperation(IO80211Interface *,
+SInt32 AirportRtlwm::performCountryCodeOperation(IO80211Interface *,
                                                    IO80211CountryCodeOp op)
 {
     if (op == kIO80211CountryCodeReset) {
@@ -140,7 +140,7 @@ SInt32 Airportrtlwm::performCountryCodeOperation(IO80211Interface *,
     return kIOReturnUnsupported;
 }
 
-SInt32 Airportrtlwm::enableFeature(IO80211FeatureCode code, void *data)
+SInt32 AirportRtlwm::enableFeature(IO80211FeatureCode code, void *data)
 {
     (void)data;
     if (code == kIO80211Feature80211n)
@@ -152,7 +152,7 @@ SInt32 Airportrtlwm::enableFeature(IO80211FeatureCode code, void *data)
  * IOEthernetController
  * -------------------------------------------------------------------------- */
 
-IOReturn Airportrtlwm::enable(IONetworkInterface *interface)
+IOReturn AirportRtlwm::enable(IONetworkInterface *interface)
 {
     if (ifEnabled)
         return kIOReturnSuccess;
@@ -164,7 +164,7 @@ IOReturn Airportrtlwm::enable(IONetworkInterface *interface)
     return ret;
 }
 
-IOReturn Airportrtlwm::disable(IONetworkInterface *interface)
+IOReturn AirportRtlwm::disable(IONetworkInterface *interface)
 {
     if (!ifEnabled)
         return kIOReturnSuccess;
@@ -174,7 +174,7 @@ IOReturn Airportrtlwm::disable(IONetworkInterface *interface)
     return kIOReturnSuccess;
 }
 
-IOReturn Airportrtlwm::getHardwareAddress(IOEthernetAddress *addr)
+IOReturn AirportRtlwm::getHardwareAddress(IOEthernetAddress *addr)
 {
     if (!addr)
         return kIOReturnBadArgument;
@@ -190,12 +190,12 @@ IOReturn Airportrtlwm::getHardwareAddress(IOEthernetAddress *addr)
     return kIOReturnSuccess;
 }
 
-bool Airportrtlwm::configureInterface(IONetworkInterface *netif)
+bool AirportRtlwm::configureInterface(IONetworkInterface *netif)
 {
     return IO80211ControllerBase::configureInterface(netif);
 }
 
-UInt32 Airportrtlwm::outputPacket(mbuf_t m, void *param)
+UInt32 AirportRtlwm::outputPacket(mbuf_t m, void *param)
 {
     (void)param;
     if (!halService || !ifEnabled) {
@@ -216,7 +216,7 @@ UInt32 Airportrtlwm::outputPacket(mbuf_t m, void *param)
  * Power management
  * -------------------------------------------------------------------------- */
 
-IOReturn Airportrtlwm::setPowerState(unsigned long ordinal, IOService *)
+IOReturn AirportRtlwm::setPowerState(unsigned long ordinal, IOService *)
 {
     if (!halService || !infraInterface)
         return IOPMAckImplied;
@@ -234,17 +234,17 @@ IOReturn Airportrtlwm::setPowerState(unsigned long ordinal, IOService *)
     return IOPMAckImplied;
 }
 
-RtlDriverInfo *Airportrtlwm::getDriverInfo() const
+RtlDriverInfo *AirportRtlwm::getDriverInfo() const
 {
     return halService ? halService->getDriverInfo() : nullptr;
 }
 
-RtlDriverController *Airportrtlwm::getDriverController() const
+RtlDriverController *AirportRtlwm::getDriverController() const
 {
     return halService ? halService->getDriverController() : nullptr;
 }
 
-bool Airportrtlwm::isInterfaceEnabled() const
+bool AirportRtlwm::isInterfaceEnabled() const
 {
     return ifEnabled;
 }

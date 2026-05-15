@@ -1,12 +1,12 @@
 /*
- * Airportrtlwm.hpp – Native Airport (IO80211) interface for Realtek WiFi kext
+ * AirportRtlwm.hpp – Native Airport (IO80211) interface for Realtek WiFi kext
  *
  * This is the Airport-visible kext: macOS treats it as a first-class Wi-Fi
  * adapter indistinguishable from Apple's built-in AirPort hardware.
  *
  * Architecture (mirrors AirportItlwm from OpenIntelWireless/itlwm):
  *
- *   Airportrtlwm
+ *   AirportRtlwm
  *     │   inherits IO80211Controller (pre-Monterey)
  *     │         or IO80211ControllerV2 (Monterey+, IO80211FAMILY_V2)
  *     │
@@ -26,8 +26,8 @@
  * (at your option) any later version.
  */
 
-#ifndef Airportrtlwm_hpp
-#define Airportrtlwm_hpp
+#ifndef AirportRtlwm_hpp
+#define AirportRtlwm_hpp
 
 #define __IO80211_TARGET __MAC_12_0   /* Monterey baseline; override per build */
 
@@ -49,8 +49,8 @@
 
 #include "AirportRtlwmInterface.hpp"
 
-class Airportrtlwm : public IO80211ControllerBase {
-    OSDeclareDefaultStructors(Airportrtlwm)
+class AirportRtlwm : public IO80211ControllerBase {
+    OSDeclareDefaultStructors(AirportRtlwm)
 
 public:
     /* IOService lifecycle */
@@ -95,4 +95,4 @@ private:
     bool                       ifEnabled         {false};
 };
 
-#endif /* Airportrtlwm_hpp */
+#endif /* AirportRtlwm_hpp */
