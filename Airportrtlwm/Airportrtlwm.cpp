@@ -11,6 +11,8 @@
 
 #include "Airportrtlwm.hpp"
 
+#define super IO80211ControllerBase
+
 OSDefineMetaClassAndStructors(AirportRtlwm, IO80211ControllerBase)
 
 SInt32 rtlwmHandleStaIoctl(AirportRtlwm *controller, UInt requestType, int request,
@@ -24,7 +26,7 @@ SInt32 rtlwmHandleVirtualIoctl(AirportRtlwm *controller, UInt requestType, int r
 
 bool AirportRtlwm::init(OSDictionary *dict)
 {
-    if (!IO80211ControllerBase::init(dict))
+    if (!super::init(dict))
         return false;
     workLoop     = nullptr;
     commandGate  = nullptr;
@@ -35,6 +37,16 @@ bool AirportRtlwm::init(OSDictionary *dict)
     return true;
 }
 
+IOService *AirportRtlwm::probe(IOService *provider, SInt32 *score)
+{
+    IOService *matched = super::probe(provider, score);
+    if (!matched)
+        return nullptr;
+    if (!OSDynamicCast(IOPCIDevice, provider))
+        return nullptr;
+    return this;
+}
+
 bool AirportRtlwm::start(IOService *provider)
 {
     pciDevice = OSDynamicCast(IOPCIDevice, provider);
@@ -43,7 +55,7 @@ bool AirportRtlwm::start(IOService *provider)
         return false;
     }
 
-    if (!IO80211ControllerBase::start(provider))
+    if (!super::start(provider))
         return false;
 
     pciDevice->setMemoryEnable(true);
@@ -71,11 +83,13 @@ void AirportRtlwm::stop(IOService *provider)
         halService->release();
         halService = nullptr;
     }
-    IO80211ControllerBase::stop(provider);
+    super::stop(provider);
 }
 
 void AirportRtlwm::free()
 {
+    if (workLoop && commandGate)
+        workLoop->removeEventSource(commandGate);
     if (commandGate) {
         commandGate->release();
         commandGate = nullptr;
@@ -84,13 +98,30 @@ void AirportRtlwm::free()
         workLoop->release();
         workLoop = nullptr;
     }
-    IO80211ControllerBase::free();
+    super::free();
 }
 
 bool AirportRtlwm::createWorkLoop()
 {
     workLoop = IOWorkLoop::workLoop();
-    return workLoop != nullptr;
+    if (!workLoop)
+        return false;
+
+    commandGate = IOCommandGate::commandGate(this);
+    if (!commandGate) {
+        workLoop->release();
+        workLoop = nullptr;
+        return false;
+    }
+
+    if (workLoop->addEventSource(commandGate) != kIOReturnSuccess) {
+        commandGate->release();
+        commandGate = nullptr;
+        workLoop->release();
+        workLoop = nullptr;
+        return false;
+    }
+    return true;
 }
 
 IOWorkLoop *AirportRtlwm::getWorkLoop() const
@@ -192,7 +223,7 @@ IOReturn AirportRtlwm::getHardwareAddress(IOEthernetAddress *addr)
 
 bool AirportRtlwm::configureInterface(IONetworkInterface *netif)
 {
-    return IO80211ControllerBase::configureInterface(netif);
+    return super::configureInterface(netif);
 }
 
 UInt32 AirportRtlwm::outputPacket(mbuf_t m, void *param)

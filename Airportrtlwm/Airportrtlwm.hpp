@@ -33,6 +33,7 @@
 
 #include <IOKit/IOService.h>
 #include <IOKit/pci/IOPCIDevice.h>
+#include <IOKit/IOCommandGate.h>
 
 #include <Airport/Apple80211.h>
 #include <HAL/RtlHalService.hpp>
@@ -55,6 +56,7 @@ class AirportRtlwm : public IO80211ControllerBase {
 public:
     /* IOService lifecycle */
     bool     init(OSDictionary *dict = nullptr)  override;
+    IOService *probe(IOService *provider, SInt32 *score) override;
     bool     start(IOService *provider)          override;
     void     stop(IOService *provider)           override;
     void     free()                              override;
